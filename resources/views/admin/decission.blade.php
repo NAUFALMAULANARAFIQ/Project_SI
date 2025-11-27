@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Data Kriteria - SPK TOPSIS</title>
+    <title>Data User DM - SPK TOPSIS</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
+     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #F1F3E0; }
         .bg-primary { background-color: #778873; } /* Hijau Gelap */
@@ -35,7 +35,7 @@
                 </a>
 
                 <!-- Data Decision Maker -->
-                <a href="/admin/decission" class="flex items-center p-3 rounded-lg hover:bg-secondary/30 transition duration-150">
+                <a href="/admin/decission" class="flex items-center p-3 rounded-lg active-link transition duration-150 text-white">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                     <span class="ml-3">Data Decision Maker</span>
                 </a>
@@ -47,7 +47,7 @@
                 </a>
 
                 <!-- Data Kriteria -->
-                <a href="/admin/kriteria" class="flex items-center p-3 rounded-lg active-link transition duration-150 text-white">
+                <a href="/admin/kriteria" class="flex items-center p-3 rounded-lg hover:bg-secondary/30 transition duration-150">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Z"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>
                     <span class="ml-3">Data Kriteria</span>
                 </a>
@@ -71,7 +71,7 @@
                 </a>
 
                 <!-- Laporan -->
-                <a href="/admin/laporan" class="flex items-center p-3 rounded-lg hover:bg-secondary/30 transition duration-150">
+                <a href="/dm/laporan" class="flex items-center p-3 rounded-lg hover:bg-secondary/30 transition duration-150">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="14" y="2" width="6" height="6" rx="1"/><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M10 17h4"/></svg>
                     <span class="ml-3">Laporan</span>
                 </a>
@@ -95,7 +95,7 @@
         <!-- Main Content Area -->
         <main class="flex-1 overflow-y-auto bg-[#fdfdfd]">
             <header class="bg-white shadow-sm h-16 flex items-center justify-between px-6 sticky top-0 z-10 border-b border-gray-100">
-                <h2 class="text-xl font-semibold text-primary">Data Kriteria & Bobot</h2>
+                <h2 class="text-xl font-semibold text-primary">Data User (Decision Maker)</h2>
                 <div class="flex items-center space-x-3 text-primary">
                     <span class="text-sm font-medium text-gray-600">Admin</span>
                 </div>
@@ -105,62 +105,70 @@
             <div class="p-8">
                 <div class="bg-white p-6 rounded-xl shadow-lg card-shadow border-t-4 border-secondary">
                     <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-2xl font-bold text-primary">Kelola Kriteria & Bobot Preferensi (C)</h2>
+                        <h2 class="text-2xl font-bold text-primary">Kelola Akun Decision Maker (Kaprodi & Dosen)</h2>
                         <button class="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-[#5d6b59] transition duration-150 shadow-md">
-                            + Tambah Kriteria
+                            + Tambah User DM
                         </button>
                     </div>
 
-                    <!-- Kriteria Table -->
+                    <!-- Keterangan Penting GDSS -->
+                    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 rounded-lg">
+                        <p class="text-sm text-blue-700 font-semibold">
+                            Sistem membutuhkan **minimal 3 Decision Maker** (Kaprodi dan Dosen) dan akan memberikan bobot lebih tinggi pada penilaian DM dengan **Jabatan Tertinggi** (Kaprodi).
+                        </p>
+                    </div>
+
+                    <!-- User DM Table -->
                     <div class="overflow-x-auto rounded-lg border border-gray-200 card-shadow">
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead>
                                 <tr class="table-header">
                                     <th class="px-6 py-3 text-left text-xs font-semibold text-primary uppercase tracking-wider">No</th>
-                                    <th class="px-6 py-3 text-left text-xs font-semibold text-primary uppercase tracking-wider">Kode</th>
-                                    <th class="px-6 py-3 text-left text-xs font-semibold text-primary uppercase tracking-wider">Nama Kriteria</th>
-                                    <th class="px-6 py-3 text-left text-xs font-semibold text-primary uppercase tracking-wider">Sifat (Cost/Benefit)</th>
-                                    <th class="px-6 py-3 text-center text-xs font-semibold text-primary uppercase tracking-wider">Bobot (W)</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-primary uppercase tracking-wider">Username</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-primary uppercase tracking-wider">NIDN/ID</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-primary uppercase tracking-wider">Jabatan (Role DM)</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-primary uppercase tracking-wider">E-mail</th>
                                     <th class="px-6 py-3 text-center text-xs font-semibold text-primary uppercase tracking-wider">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
-                                <!-- Data Row 1 (C1) -->
+                                <!-- Data Row 1: Kaprodi (DM dengan bobot tertinggi) -->
                                 <tr>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">1</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800">C1</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">Tingkat Kesulitan</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-red-500 font-semibold">Cost</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-bold text-primary">4</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800">sukamto</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">001234567</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600">Kaprodi</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">sukamto@unri.ac.id</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium space-x-2">
                                         <button class="text-blue-500 hover:text-blue-700 p-1 rounded-full transition duration-150" title="Edit"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></button>
                                         <button class="text-red-500 hover:text-red-700 p-1 rounded-full transition duration-150" title="Hapus"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg></button>
                                     </td>
                                 </tr>
-                                <!-- Data Row 2 (C2) -->
+                                <!-- Data Row 2: Dosen A (DM Anggota 1) -->
                                 <tr class="bg-gray-50">
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">2</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800">C2</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">Referensi</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-semibold">Benefit</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-bold text-primary">3</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800">aidilf</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">009876543</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-secondary font-semibold">Dosen</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">aidil.f@unri.ac.id</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium space-x-2">
                                         <button class="text-blue-500 hover:text-blue-700 p-1 rounded-full transition duration-150" title="Edit"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></button>
                                         <button class="text-red-500 hover:text-red-700 p-1 rounded-full transition duration-150" title="Hapus"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg></button>
                                     </td>
                                 </tr>
-                                <!-- Data Row 3 (C3) -->
+                                <!-- Data Row 3: Dosen B (DM Anggota 2 - memenuhi syarat minimal 3 DM) -->
                                 <tr>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">3</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800">C3</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">Lapangan Pekerjaan</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-semibold">Benefit</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-bold text-primary">3</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800">ranggap</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">005432109</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-secondary font-semibold">Dosen</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">rangga.p@unri.ac.id</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium space-x-2">
                                         <button class="text-blue-500 hover:text-blue-700 p-1 rounded-full transition duration-150" title="Edit"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></button>
                                         <button class="text-red-500 hover:text-red-700 p-1 rounded-full transition duration-150" title="Hapus"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg></button>
                                     </td>
                                 </tr>
+                                <!-- Tambahkan data lainnya di sini -->
                             </tbody>
                         </table>
                     </div>

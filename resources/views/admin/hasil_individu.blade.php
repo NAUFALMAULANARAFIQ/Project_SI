@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard DM - SPK TOPSIS</title>
+    <title>Hasil Individu - SPK TOPSIS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -20,7 +20,7 @@
 <body>
     <div class="flex h-screen overflow-hidden">
 
-        <!-- Sidebar Navigation -->
+        <!-- Sidebar Navigation (DM) -->
         <aside class="w-64 sidebar text-white flex-shrink-0 z-20 shadow-xl overflow-y-auto">
             <div class="p-6 pb-4 border-b border-gray-600/50">
                 <h1 class="text-2xl font-bold tracking-wider text-white">GDSS</h1>
@@ -29,7 +29,7 @@
             <nav class="p-4 space-y-1">
 
                 <!-- Dashboard Link (ACTIVE) -->
-                <a href="/admin/dashboard" class="flex items-center p-3 rounded-lg active-link transition duration-150 text-white">
+                <a href="/admin/dashboard" class="flex items-center p-3 rounded-lg hover:bg-secondary/30 transition duration-150">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
                     <span class="ml-3">Dashboard</span>
                 </a>
@@ -47,7 +47,7 @@
                 </a>
 
                 <!-- Data Kriteria -->
-                <a href="/dm/kriteria" class="flex items-center p-3 rounded-lg hover:bg-secondary/30 transition duration-150">
+                <a href="/admin/kriteria" class="flex items-center p-3 rounded-lg hover:bg-secondary/30 transition duration-150">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Z"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>
                     <span class="ml-3">Data Kriteria</span>
                 </a>
@@ -59,7 +59,7 @@
                 </a>
 
                 <!-- Hasil Individu -->
-                <a href="/admin/individu" class="flex items-center p-3 rounded-lg hover:bg-secondary/30 transition duration-150">
+                <a href="/admin/individu" class="flex items-center p-3 rounded-lg active-link transition duration-150 text-white">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/><polyline points="10 8 14 12 10 16"/></svg>
                     <span class="ml-3">Hasil Individu</span>
                 </a>
@@ -71,7 +71,7 @@
                 </a>
 
                 <!-- Laporan -->
-                <a href="/admin/laporan" class="flex items-center p-3 rounded-lg hover:bg-secondary/30 transition duration-150">
+                <a href="/dm/laporan" class="flex items-center p-3 rounded-lg hover:bg-secondary/30 transition duration-150">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="14" y="2" width="6" height="6" rx="1"/><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M10 17h4"/></svg>
                     <span class="ml-3">Laporan</span>
                 </a>
@@ -94,74 +94,68 @@
 
         <!-- Main Content Area -->
         <main class="flex-1 overflow-y-auto bg-[#fdfdfd]">
-            <!-- Top Bar Header -->
             <header class="bg-white shadow-sm h-16 flex items-center justify-between px-6 sticky top-0 z-10 border-b border-gray-100">
-                <h2 class="text-xl font-semibold text-gray-700">Dashboard</h2>
+                <h2 class="text-xl font-semibold text-primary">Hasil Perhitungan Individu</h2>
                 <div class="flex items-center space-x-3 text-primary">
-                    <span class="text-sm font-medium text-gray-600">Welcome, Decision Maker 1</span>
-                    <div class="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-primary font-bold text-sm">DM1</div>
+                    <span class="text-sm font-medium text-gray-600">Decision Maker 1 (Kaprodi)</span>
                 </div>
             </header>
 
             <!-- Page Content -->
             <div class="p-8">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <!-- Card 1: Total Alternatif (Matakuliah) -->
-                    <div class="card-bg p-6 rounded-xl shadow-lg card-shadow">
-                        <p class="text-sm text-gray-500 uppercase font-medium">Total Alternatif</p>
-                        <p class="text-4xl font-extrabold text-primary mt-1">5</p>
-                        <p class="text-xs text-gray-400 mt-2">Matakuliah Pilihan Aktif</p>
-                    </div>
-                    <!-- Card 2: Kriteria Penilaian -->
-                    <div class="card-bg p-6 rounded-xl shadow-lg card-shadow">
-                        <p class="text-sm text-gray-500 uppercase font-medium">Kriteria Penilaian</p>
-                        <p class="text-4xl font-extrabold text-primary mt-1">5</p>
-                        <p class="text-xs text-gray-400 mt-2">Tingkat Kesulitan, Minat, dll.</p>
-                    </div>
-                    <!-- Card 3: Decision Maker -->
-                    <div class="card-bg p-6 rounded-xl shadow-lg card-shadow">
-                        <p class="text-sm text-gray-500 uppercase font-medium">Decision Maker</p>
-                        <p class="text-4xl font-extrabold text-primary mt-1">5</p>
-                        <p class="text-xs text-gray-400 mt-2">Kaprodi & Dosen yang terdaftar</p>
-                    </div>
-                </div>
+                <div class="bg-white p-8 rounded-xl card-shadow border-t-4 border-primary">
+                    <h1 class="text-2xl font-bold text-primary mb-6">Peringkat Matakuliah Berdasarkan Penilaian Anda</h1>
+                    <p class="mb-6 text-gray-600">Ini adalah hasil perhitungan metode TOPSIS murni dari data penilaian yang telah Anda inputkan sebelumnya.</p>
 
-                <!-- Progress & Aktivitas (Layout 2 kolom) -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-                    <!-- Kolom 1: Progress Penilaian -->
-                    <div class="bg-white p-6 rounded-xl shadow-lg card-shadow border-t-4 border-primary">
-                        <h3 class="text-lg font-semibold text-gray-700 mb-4">Progress Penilaian</h3>
-                        <div class="space-y-4">
-                            <p class="text-sm font-medium text-primary">100% penilaian telah selesai.</p>
-                            <!-- Progress Bar -->
-                            <div class="w-full bg-gray-200 rounded-full h-2.5">
-                                <div class="bg-primary h-2.5 rounded-full" style="width: 100%"></div>
-                            </div>
-                            <p class="text-xs text-gray-500">Anda telah menyelesaikan semua penilaian Matakuliah Pilihan untuk semester ini.</p>
+                    <!-- Ringkasan Hasil -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <div class="bg-D2DCB6 p-4 rounded-lg shadow-sm">
+                            <p class="text-sm font-semibold text-gray-700">Penilai Aktif</p>
+                            <p class="text-xl font-bold text-primary">Kaprodi (Jabatan Tertinggi)</p>
+                        </div>
+                        <div class="bg-D2DCB6 p-4 rounded-lg shadow-sm">
+                            <p class="text-sm font-semibold text-gray-700">Semester Fokus</p>
+                            <p class="text-xl font-bold text-primary">Semester IV</p>
+                        </div>
+                        <div class="bg-D2DCB6 p-4 rounded-lg shadow-sm">
+                            <p class="text-sm font-semibold text-gray-700">Status Penilaian</p>
+                            <p class="text-xl font-bold text-primary">Selesai</p>
                         </div>
                     </div>
 
-                    <!-- Kolom 2: Ringkasan Aktivitas Terakhir -->
-                    <div class="bg-white p-6 rounded-xl shadow-lg card-shadow border-t-4 border-secondary">
-                        <h3 class="text-lg font-semibold text-gray-700 mb-4">Ringkasan Aktivitas Terakhir</h3>
-                        <ul class="space-y-3 text-sm text-gray-600">
-                            <li class="flex justify-between items-center border-b border-gray-100 pb-2">
-                                <span>DM1 menilai Alternatif A</span>
-                                <span class="text-xs text-gray-400">2 jam lalu</span>
-                            </li>
-                            <li class="flex justify-between items-center border-b border-gray-100 pb-2">
-                                <span>DM2 menyelesaikan penilaian</span>
-                                <span class="text-xs text-gray-400">5 jam lalu</span>
-                            </li>
-                            <li class="flex justify-between items-center pb-2">
-                                <span>DM4 melihat hasil BORDA</span>
-                                <span class="text-xs text-gray-400">Kemarin</span>
-                            </li>
-                        </ul>
+                    <!-- Ranking Table -->
+                    <div class="overflow-x-auto rounded-lg border border-gray-200 card-shadow">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead>
+                                <tr class="table-header">
+                                    <th class="px-6 py-3 text-center text-xs font-semibold text-primary uppercase tracking-wider">Rangking</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-primary uppercase tracking-wider">Nama Alternatif (Matakuliah)</th>
+                                    <th class="px-6 py-3 text-center text-xs font-semibold text-primary uppercase tracking-wider">Nilai Preferensi (V)</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <!-- Data Mining - Rank 1 (Contoh Kasus IV) -->
+                                <tr class="bg-green-100/50">
+                                    <td class="px-6 py-4 whitespace-nowrap text-center text-2xl font-extrabold text-primary">#1</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-lg font-bold text-primary">Data Mining</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium text-gray-800">0.64332</td>
+                                </tr>
+                                <!-- Perancangan Sumber Daya Perusahaan - Rank 2 -->
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center text-xl font-bold text-secondary">#2</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-base font-semibold text-gray-800">Perancangan Sumber Daya Perusahaan</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium text-gray-800">0.49405</td>
+                                </tr>
+                                <!-- Pengolahan Citra Digital - Rank 3 -->
+                                <tr class="bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap text-center text-lg font-semibold text-gray-700">#3</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-base font-medium text-gray-700">Pengolahan Citra Digital</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium text-gray-800">0.35667</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-
             </div>
         </main>
     </div>

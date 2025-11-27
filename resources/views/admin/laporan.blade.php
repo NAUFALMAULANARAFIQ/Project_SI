@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard DM - SPK TOPSIS</title>
+    <title>Laporan - SPK TOPSIS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -20,7 +20,7 @@
 <body>
     <div class="flex h-screen overflow-hidden">
 
-        <!-- Sidebar Navigation -->
+        <!-- Sidebar Navigation (DM) -->
         <aside class="w-64 sidebar text-white flex-shrink-0 z-20 shadow-xl overflow-y-auto">
             <div class="p-6 pb-4 border-b border-gray-600/50">
                 <h1 class="text-2xl font-bold tracking-wider text-white">GDSS</h1>
@@ -29,7 +29,7 @@
             <nav class="p-4 space-y-1">
 
                 <!-- Dashboard Link (ACTIVE) -->
-                <a href="/admin/dashboard" class="flex items-center p-3 rounded-lg active-link transition duration-150 text-white">
+                <a href="/admin/dashboard" class="flex items-center p-3 rounded-lg hover:bg-secondary/30 transition duration-150">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
                     <span class="ml-3">Dashboard</span>
                 </a>
@@ -47,7 +47,7 @@
                 </a>
 
                 <!-- Data Kriteria -->
-                <a href="/dm/kriteria" class="flex items-center p-3 rounded-lg hover:bg-secondary/30 transition duration-150">
+                <a href="/admin/kriteria" class="flex items-center p-3 rounded-lg hover:bg-secondary/30 transition duration-150">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Z"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>
                     <span class="ml-3">Data Kriteria</span>
                 </a>
@@ -71,7 +71,7 @@
                 </a>
 
                 <!-- Laporan -->
-                <a href="/admin/laporan" class="flex items-center p-3 rounded-lg hover:bg-secondary/30 transition duration-150">
+                <a href="/admin/laporan" class="flex items-center p-3 rounded-lg active-link transition duration-150 text-white">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="14" y="2" width="6" height="6" rx="1"/><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M10 17h4"/></svg>
                     <span class="ml-3">Laporan</span>
                 </a>
@@ -94,74 +94,48 @@
 
         <!-- Main Content Area -->
         <main class="flex-1 overflow-y-auto bg-[#fdfdfd]">
-            <!-- Top Bar Header -->
             <header class="bg-white shadow-sm h-16 flex items-center justify-between px-6 sticky top-0 z-10 border-b border-gray-100">
-                <h2 class="text-xl font-semibold text-gray-700">Dashboard</h2>
+                <h2 class="text-xl font-semibold text-primary">Cetak Laporan Hasil</h2>
                 <div class="flex items-center space-x-3 text-primary">
-                    <span class="text-sm font-medium text-gray-600">Welcome, Decision Maker 1</span>
-                    <div class="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-primary font-bold text-sm">DM1</div>
+                    <span class="text-sm font-medium text-gray-600">Decision Maker 1 (Kaprodi)</span>
                 </div>
             </header>
 
             <!-- Page Content -->
             <div class="p-8">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <!-- Card 1: Total Alternatif (Matakuliah) -->
-                    <div class="card-bg p-6 rounded-xl shadow-lg card-shadow">
-                        <p class="text-sm text-gray-500 uppercase font-medium">Total Alternatif</p>
-                        <p class="text-4xl font-extrabold text-primary mt-1">5</p>
-                        <p class="text-xs text-gray-400 mt-2">Matakuliah Pilihan Aktif</p>
-                    </div>
-                    <!-- Card 2: Kriteria Penilaian -->
-                    <div class="card-bg p-6 rounded-xl shadow-lg card-shadow">
-                        <p class="text-sm text-gray-500 uppercase font-medium">Kriteria Penilaian</p>
-                        <p class="text-4xl font-extrabold text-primary mt-1">5</p>
-                        <p class="text-xs text-gray-400 mt-2">Tingkat Kesulitan, Minat, dll.</p>
-                    </div>
-                    <!-- Card 3: Decision Maker -->
-                    <div class="card-bg p-6 rounded-xl shadow-lg card-shadow">
-                        <p class="text-sm text-gray-500 uppercase font-medium">Decision Maker</p>
-                        <p class="text-4xl font-extrabold text-primary mt-1">5</p>
-                        <p class="text-xs text-gray-400 mt-2">Kaprodi & Dosen yang terdaftar</p>
-                    </div>
-                </div>
+                <div class="bg-white p-8 rounded-xl card-shadow border-t-4 border-primary">
+                    <h1 class="text-2xl font-bold text-primary mb-6">Pilih Opsi Laporan</h1>
 
-                <!-- Progress & Aktivitas (Layout 2 kolom) -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-                    <!-- Kolom 1: Progress Penilaian -->
-                    <div class="bg-white p-6 rounded-xl shadow-lg card-shadow border-t-4 border-primary">
-                        <h3 class="text-lg font-semibold text-gray-700 mb-4">Progress Penilaian</h3>
-                        <div class="space-y-4">
-                            <p class="text-sm font-medium text-primary">100% penilaian telah selesai.</p>
-                            <!-- Progress Bar -->
-                            <div class="w-full bg-gray-200 rounded-full h-2.5">
-                                <div class="bg-primary h-2.5 rounded-full" style="width: 100%"></div>
+                    <form class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                             <div>
+                                <label for="jenis_laporan" class="block text-sm font-semibold text-gray-700 mb-1">Jenis Laporan:</label>
+                                <select id="jenis_laporan" class="w-full p-3 border-2 border-gray-300 rounded-lg select-custom focus:border-primary focus:ring-primary">
+                                    <option value="individu">Laporan Hasil Individu</option>
+                                    <option value="kelompok">Laporan Hasil Konsensus Kelompok</option>
+                                    <option value="all">Laporan Proses Perhitungan Lengkap (TOPSIS)</option>
+                                </select>
                             </div>
-                            <p class="text-xs text-gray-500">Anda telah menyelesaikan semua penilaian Matakuliah Pilihan untuk semester ini.</p>
+                            <div>
+                                <label for="semester_laporan" class="block text-sm font-semibold text-gray-700 mb-1">Semester:</label>
+                                <select id="semester_laporan" class="w-full p-3 border-2 border-gray-300 rounded-lg select-custom focus:border-primary focus:ring-primary">
+                                    <option value="4">Semester IV</option>
+                                    <option value="5">Semester V</option>
+                                    <option value="6">Semester VI</option>
+                                </select>
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Kolom 2: Ringkasan Aktivitas Terakhir -->
-                    <div class="bg-white p-6 rounded-xl shadow-lg card-shadow border-t-4 border-secondary">
-                        <h3 class="text-lg font-semibold text-gray-700 mb-4">Ringkasan Aktivitas Terakhir</h3>
-                        <ul class="space-y-3 text-sm text-gray-600">
-                            <li class="flex justify-between items-center border-b border-gray-100 pb-2">
-                                <span>DM1 menilai Alternatif A</span>
-                                <span class="text-xs text-gray-400">2 jam lalu</span>
-                            </li>
-                            <li class="flex justify-between items-center border-b border-gray-100 pb-2">
-                                <span>DM2 menyelesaikan penilaian</span>
-                                <span class="text-xs text-gray-400">5 jam lalu</span>
-                            </li>
-                            <li class="flex justify-between items-center pb-2">
-                                <span>DM4 melihat hasil BORDA</span>
-                                <span class="text-xs text-gray-400">Kemarin</span>
-                            </li>
-                        </ul>
-                    </div>
+                        <!-- Tombol Cetak -->
+                        <div class="flex justify-end pt-4">
+                            <button type="submit"
+                                    class="px-6 py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition duration-200 card-shadow">
+                                <span class="flex items-center"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v7H6z"/></svg> Cetak Laporan (PDF)</span>
+                            </button>
+                        </div>
+                    </form>
+
                 </div>
-
             </div>
         </main>
     </div>

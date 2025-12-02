@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Mk_Plhn extends Model
 {
     use HasFactory;
-
+    protected $primaryKey = 'id_mp';
     protected $table = 'mk_plhn';
 
     protected $fillable = [

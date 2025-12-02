@@ -42,9 +42,9 @@ class AuthController extends Controller
 
         // 5. Redirect Sesuai Level
         if ($user->level_user === 'ketua') {
-            return redirect()->route('ketua.dashboard');
+            return redirect()->route('admin.dashboard');
         } else {
-            return redirect()->route('perhitungan.create');
+            return redirect()->route('mahasiswa.dashboard');
         }
     }
 

@@ -10,24 +10,25 @@ class Mk_PlhnController extends Controller
     public function index()
     {
         $matakuliah = Mk_Plhn::all();
-        return view('admin.mk.index', compact('matakuliah'));
+        return view('admin.alternatif', compact('matakuliah'));
     }
 
     public function create()
     {
-        return view('admin.mk.create');
+    // Redirect to index which prepares $matakuliah for the view
+    return redirect()->route('admin.alternatif');
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'kode_mp' => 'required|unique:mk_plhns',
+            'kode_mp' => 'required|unique:mk_plhns,kode_mp',
             'nama_mp' => 'required',
             'semester' => 'required|integer',
         ]);
 
-        Mk_Plhn::create($request->all());
-        return redirect()->route('mk.index')->with('success', 'Mata Kuliah berhasil ditambahkan');
+        Mk_Plhn::create($request->only(['kode_mp','nama_mp','semester','sks']));
+        return redirect()->route('admin.alternatif')->with('success', 'Mata Kuliah berhasil ditambahkan');
     }
 
     public function edit($id)
@@ -39,13 +40,13 @@ class Mk_PlhnController extends Controller
     public function update(Request $request, $id)
     {
         $mk = Mk_Plhn::where('id_mp', $id)->firstOrFail();
-        $mk->update($request->all());
-        return redirect()->route('mk.index')->with('success', 'Data berhasil diupdate');
+    $mk->update($request->only(['kode_mp','nama_mp','semester','sks']));
+    return redirect()->route('admin.alternatif')->with('success', 'Data berhasil diupdate');
     }
 
     public function destroy($id)
     {
-        Mk_Plhn::where('id_mp', $id)->delete();
-        return redirect()->route('mk.index')->with('success', 'Data dihapus');
+    Mk_Plhn::where('id_mp', $id)->delete();
+    return redirect()->route('admin.alternatif')->with('success', 'Data dihapus');
     }
 }

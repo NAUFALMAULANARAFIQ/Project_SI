@@ -3,19 +3,26 @@
 namespace App\Http\Controllers;
 
 use App\Models\Kepentingan;
+use App\Models\User;
+use App\Models\Kriteria;
 use Illuminate\Http\Request;
 
 class KepentinganController extends Controller
 {
     public function index()
     {
+        // Siapkan semua data yang dibutuhkan view admin.decission
         $bobots = Kepentingan::all();
-        return view('admin.bobot.index', compact('bobots'));
+        $users = User::all();
+        $kriterias = Kriteria::all();
+
+        return view('admin.decission', compact('bobots','users','kriterias'));
     }
 
     public function create()
     {
-        return view('admin.bobot.create');
+    // Redirect to index which prepares $bobots, $users and $kriterias
+    return redirect()->route('admin.decission');
     }
 
     public function store(Request $request)
@@ -25,16 +32,17 @@ class KepentinganController extends Controller
             'bobot' => 'required|integer',
         ]);
 
-        Kepentingan::create($request->all());
+        Kepentingan::create($request->only(['nama_bobot','bobot']));
 
-        return redirect()->route('bobot.index')
-                         ->with('success', 'Data bobot berhasil ditambahkan');
+        return redirect()->route('admin.decission')
+                 ->with('success', 'Data bobot berhasil ditambahkan');
     }
 
     public function edit($id)
     {
         $bobot = Kepentingan::findOrFail($id);
-        return view('admin.bobot.edit', compact('bobot'));
+        // Pastikan view ada; gunakan admin.decission.edit jika ada, fallback ke admin.decission
+        return view('admin.decission.edit', compact('bobot'));
     }
 
     public function update(Request $request, $id)
@@ -45,10 +53,10 @@ class KepentinganController extends Controller
         ]);
 
         $bobot = Kepentingan::findOrFail($id);
-        $bobot->update($request->all());
+        $bobot->update($request->only(['nama_bobot','bobot']));
 
-        return redirect()->route('bobot.index')
-                         ->with('success', 'Data bobot berhasil diperbarui');
+        return redirect()->route('admin.decission')
+                 ->with('success', 'Data bobot berhasil diperbarui');
     }
 
     public function destroy($id)
@@ -56,7 +64,7 @@ class KepentinganController extends Controller
         $bobot = Kepentingan::findOrFail($id);
         $bobot->delete();
 
-        return redirect()->route('bobot.index')
-                         ->with('success', 'Data bobot berhasil dihapus');
+        return redirect()->route('admin.decission')
+                 ->with('success', 'Data bobot berhasil dihapus');
     }
 }

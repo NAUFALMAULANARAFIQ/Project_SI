@@ -11,8 +11,9 @@ class UserController extends Controller
 {
     public function index()
     {
-        $users = User::all();
-        return view('admin.user.index', compact('users'));
+    // Redirect to admin.decission which is the canonical view for Decision Makers
+    // KepentinganController@index will prepare $users, $bobots and $kriterias
+    return redirect()->route('admin.decission');
     }
 
     public function create()
@@ -26,8 +27,9 @@ class UserController extends Controller
             'username' => 'required|unique:users',
             'email' => 'required|email|unique:users',
             'password' => 'required|min:6',
-            'level_user' => 'required|in:admin,mahasiswa',
-            'status' => 'required|in:aktif,tidak aktif'
+            // application uses 'ketua' and 'anggota' as level_user values
+            'level_user' => 'required|in:ketua,anggota',
+            'status' => 'sometimes|in:aktif,tidak aktif'
         ]);
 
         User::create([
@@ -35,10 +37,10 @@ class UserController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'level_user' => $request->level_user,
-            'status' => $request->status,
+            'status' => $request->status ?? 'aktif',
         ]);
 
-        return redirect()->route('user.index')->with('success', 'User berhasil ditambahkan');
+        return redirect()->route('admin.decission')->with('success', 'User berhasil ditambahkan');
     }
 
     public function edit($id)
@@ -54,8 +56,8 @@ class UserController extends Controller
         $request->validate([
             'username' => 'required|unique:users,username,'.$id,
             'email' => 'required|email|unique:users,email,'.$id,
-            'level_user' => 'required|in:admin,mahasiswa',
-            'status' => 'required'
+            'level_user' => 'required|in:ketua,anggota',
+            'status' => 'sometimes|in:aktif,tidak aktif'
         ]);
 
         $data = [
@@ -71,7 +73,7 @@ class UserController extends Controller
 
         $user->update($data);
 
-        return redirect()->route('user.index')->with('success', 'Data user berhasil diperbarui');
+    return redirect()->route('admin.decission')->with('success', 'Data user berhasil diperbarui');
     }
 
     public function destroy($id)
@@ -82,6 +84,6 @@ class UserController extends Controller
         }
 
         $user->delete();
-        return redirect()->route('user.index')->with('success', 'User berhasil dihapus');
+        return redirect()->route('admin.decission')->with('success', 'User berhasil dihapus');
     }
 }

@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\Perhitungan;
@@ -9,169 +8,152 @@ use App\Models\Kriteria;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
 
 class PerhitunganController extends Controller
 {
-    // MENAMPILKAN FORM PENILAIAN
     public function create()
     {
-        // PERBAIKAN: Tidak perlu ambil data mahasiswa lagi
-        // Ambil semua Mata Kuliah (karena Dosen/Decision Maker menilai semua opsi)
         $mataKuliah = Mk_Plhn::all();
         $kriterias = Kriteria::all();
-
-        return view('perhitungan.create', compact('mataKuliah', 'kriterias'));
+        return view('mahasiswa.perhitungan_form', compact('mataKuliah', 'kriterias'));
     }
 
-    // MENYIMPAN DATA PENILAIAN
     public function store(Request $request)
     {
-        // PERBAIKAN: Ambil ID user dari Auth langsung
-        $userId = Auth::id();
+        // Sesuaikan cara ambil user ID sesuai AuthController kamu
+        $user = Session::get('user_session');
+        $userId = $user->id_user;
 
         $request->validate([
             'nilai' => 'required|array',
         ]);
 
-        // Hapus penilaian lama jika user ini sudah pernah menilai (agar tidak duplikat saat revisi)
-        // Opsional, tapi bagus untuk UX
-        Perhitungan::where('user_id', $userId)->delete();
-        Perhitungan_Detail::where('user_id', $userId)->delete();
+        DB::beginTransaction();
+        try {
+            // 1. Hapus penilaian lama user ini (agar bersih saat update)
+            // Kita cari id_perhitungan milik user ini dulu
+            $oldCalcs = Perhitungan::where('id_user', $userId)->pluck('id_perhitungan');
+            Perhitungan_Detail::whereIn('id_perhitungan', $oldCalcs)->delete();
+            Perhitungan::where('id_user', $userId)->delete();
 
-        DB::transaction(function () use ($request, $userId) {
+            // 2. Simpan Nilai Mentah
             foreach ($request->nilai as $id_mp => $kriteria_nilai) {
-
-                // Simpan Header Perhitungan
                 $perhitungan = Perhitungan::create([
-                    'user_id' => $userId, // GANTI id_mhs JADI user_id
+                    'id_user' => $userId,
                     'id_mp' => $id_mp,
-                    'hasil' => 0
+                    'hasil' => 0 // Nanti diupdate setelah hitung TOPSIS
                 ]);
 
                 foreach ($kriteria_nilai as $id_kriteria => $bobot) {
-                    // Simpan Detail Perhitungan
                     Perhitungan_Detail::create([
                         'id_perhitungan' => $perhitungan->id_perhitungan,
-                        'user_id' => $userId, // GANTI id_mhs JADI user_id
+                        'id_user' => $userId,
                         'id_mp' => $id_mp,
                         'id_kriteria' => $id_kriteria,
                         'bobot' => $bobot
                     ]);
                 }
             }
-        });
 
-        return redirect()->route('perhitungan.hasil')->with('success', 'Penilaian berhasil disimpan! Menghitung TOPSIS...');
+            // 3. TRIGGER HITUNG TOPSIS OTOMATIS DI SINI
+            $this->hitungTopsisIndividu($userId);
+
+            DB::commit();
+            return redirect()->route('mahasiswa_hasil_perhitungan')->with('success', 'Penilaian berhasil disimpan dan dihitung.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
     }
 
-    // HITUNG TOPSIS INDIVIDUAL (Per User)
-    public function hasil()
+    // Fungsi Private untuk menghitung TOPSIS per user
+    private function hitungTopsisIndividu($userId)
     {
-        $userId = Auth::id();
-
-        // PERBAIKAN: Query ke user_id, bukan id_mhs
-        $perhitungans = Perhitungan::with('details', 'mkPlhn')
-                        ->where('user_id', $userId)
-                        ->get();
-
         $kriterias = Kriteria::all();
+        $perhitungans = Perhitungan::with('details')->where('id_user', $userId)->get();
 
-        if ($perhitungans->isEmpty()) {
-            return redirect()->route('perhitungan.create')->with('error', 'Silakan lakukan penilaian terlebih dahulu.');
-        }
+        if ($perhitungans->isEmpty()) return;
 
-        // --- STEP 1: Matriks Keputusan (X) ---
-        $matriks = [];
-        foreach ($perhitungans as $p) {
-            foreach ($p->details as $d) {
-                $matriks[$p->id_mp][$d->id_kriteria] = $d->bobot;
-            }
-        }
-
-        // --- STEP 2: Matriks Ternormalisasi (R) ---
+        // Step 1: Pembagi (Normalisasi)
         $pembagi = [];
         foreach ($kriterias as $k) {
             $sumKuadrat = 0;
-            foreach ($matriks as $id_mp => $nilai_kriteria) {
-                $nilai = $nilai_kriteria[$k->id_kriteria] ?? 0;
-                $sumKuadrat += pow($nilai, 2);
+            // Ambil semua detail user ini untuk kriteria K
+            $details = Perhitungan_Detail::where('id_user', $userId)
+                        ->where('id_kriteria', $k->id_kriteria)->get();
+            foreach ($details as $d) {
+                $sumKuadrat += pow($d->bobot, 2);
             }
             $pembagi[$k->id_kriteria] = sqrt($sumKuadrat);
         }
 
-        $matriksR = [];
-        foreach ($matriks as $id_mp => $nilai_kriteria) {
-            foreach ($kriterias as $k) {
-                $val = $nilai_kriteria[$k->id_kriteria] ?? 0;
-                $matriksR[$id_mp][$k->id_kriteria] = ($pembagi[$k->id_kriteria] > 0)
-                    ? $val / $pembagi[$k->id_kriteria]
-                    : 0;
-            }
-        }
-
-        // --- STEP 3: Matriks Ternormalisasi Terbobot (Y) ---
+        // Step 2 & 3: Matriks Terbobot (Y) & Solusi Ideal
+        $solusiPositif = [];
+        $solusiNegatif = [];
         $matriksY = [];
-        foreach ($matriksR as $id_mp => $nilai_kriteria) {
-            foreach ($kriterias as $k) {
-                $matriksY[$id_mp][$k->id_kriteria] = $nilai_kriteria[$k->id_kriteria] * $k->bobot;
-            }
-        }
 
-        // --- STEP 4: Solusi Ideal Positif (A+) dan Negatif (A-) ---
-        $solusiIdealPositif = [];
-        $solusiIdealNegatif = [];
-
+        // Inisialisasi array min/max
         foreach ($kriterias as $k) {
-            $kolomNilai = array_column($matriksY, $k->id_kriteria);
-            if ($k->cost_benefit == 'benefit') {
-                $solusiIdealPositif[$k->id_kriteria] = max($kolomNilai);
-                $solusiIdealNegatif[$k->id_kriteria] = min($kolomNilai);
-            } else {
-                $solusiIdealPositif[$k->id_kriteria] = min($kolomNilai);
-                $solusiIdealNegatif[$k->id_kriteria] = max($kolomNilai);
-            }
+            $matriksY[$k->id_kriteria] = [];
         }
 
-        // --- STEP 5: Jarak Solusi Ideal (D+ dan D-) ---
-        $jarakPositif = [];
-        $jarakNegatif = [];
-
-        foreach ($matriksY as $id_mp => $nilai_kriteria) {
-            $totalPos = 0;
-            $totalNeg = 0;
-            foreach ($kriterias as $k) {
-                $y = $nilai_kriteria[$k->id_kriteria];
-                $totalPos += pow($y - $solusiIdealPositif[$k->id_kriteria], 2);
-                $totalNeg += pow($y - $solusiIdealNegatif[$k->id_kriteria], 2);
-            }
-            $jarakPositif[$id_mp] = sqrt($totalPos);
-            $jarakNegatif[$id_mp] = sqrt($totalNeg);
-        }
-
-        // --- STEP 6: Nilai Preferensi (V) ---
-        $hasilAkhir = [];
         foreach ($perhitungans as $p) {
-            $dPos = $jarakPositif[$p->id_mp];
-            $dNeg = $jarakNegatif[$p->id_mp];
+            foreach ($p->details as $d) {
+                // Normalisasi * Bobot Kriteria
+                $nilaiR = ($pembagi[$d->id_kriteria] > 0) ? $d->bobot / $pembagi[$d->id_kriteria] : 0;
+                $nilaiY = $nilaiR * $d->kriteria->bobot;
 
-            // Hitung V
-            $nilaiV = ($dPos + $dNeg > 0) ? $dNeg / ($dNeg + $dPos) : 0;
-
-            // Update ke database (PENTING UNTUK BORDA NANTI)
-            $p->hasil = $nilaiV;
-            $p->save();
-
-            $hasilAkhir[] = [
-                'mk' => $p->mkPlhn, // Pastikan relasi di Model Perhitungan namanya mkPlhn
-                'nilai' => $nilaiV,
-            ];
+                $matriksY[$d->id_kriteria][] = $nilaiY;
+                // Simpan sementara untuk akses nanti (bisa dioptimasi)
+                $d->nilai_y_temp = $nilaiY;
+            }
         }
 
-        // Urutkan Ranking (Terbesar ke Terkecil)
-        usort($hasilAkhir, function ($a, $b) {
-            return $b['nilai'] <=> $a['nilai'];
-        });
+        // Cari A+ dan A-
+        foreach ($kriterias as $k) {
+            if ($k->cost_benefit == 'benefit') {
+                $solusiPositif[$k->id_kriteria] = max($matriksY[$k->id_kriteria]);
+                $solusiNegatif[$k->id_kriteria] = min($matriksY[$k->id_kriteria]);
+            } else {
+                $solusiPositif[$k->id_kriteria] = min($matriksY[$k->id_kriteria]);
+                $solusiNegatif[$k->id_kriteria] = max($matriksY[$k->id_kriteria]);
+            }
+        }
 
-        return view('perhitungan.hasil', compact('hasilAkhir', 'matriksY', 'solusiIdealPositif', 'solusiIdealNegatif'));
+        // Step 4: Jarak & Nilai Preferensi (V)
+        foreach ($perhitungans as $p) {
+            $dPos = 0;
+            $dNeg = 0;
+            foreach ($p->details as $d) {
+                $y = $d->nilai_y_temp; // Nilai Y yang sudah dihitung tadi
+                $dPos += pow($y - $solusiPositif[$d->id_kriteria], 2);
+                $dNeg += pow($y - $solusiNegatif[$d->id_kriteria], 2);
+            }
+            $jarakPos = sqrt($dPos);
+            $jarakNeg = sqrt($dNeg);
+
+            // Rumus V
+            $hasilV = ($jarakPos + $jarakNeg > 0) ? $jarakNeg / ($jarakNeg + $jarakPos) : 0;
+
+            // Update Database
+            $p->hasil = $hasilV;
+            $p->save();
+        }
+    }
+
+    public function hasil()
+    {
+        $user = Session::get('user_session');
+        $hasilAkhir = Perhitungan::with('mkPlhn')
+                        ->where('id_user', $user->id_user)
+                        ->orderByDesc('hasil')
+                        ->get();
+        // Jika user adalah ketua (admin), tunjukkan view admin untuk hasil individu
+        if(isset($user->level_user) && $user->level_user === 'ketua'){
+            return view('admin.hasil_individu', compact('hasilAkhir'));
+        }
+
+        return view('mahasiswa.hasil_perhitungan', compact('hasilAkhir'));
     }
 }

@@ -9,13 +9,10 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up()
+    public function up(): void
     {
-        Schema::create('mk_plhn', function (Blueprint $table) {
-            $table->id('id_mp');
-            $table->string('kode_mp');
-            $table->string('nama_mp');
-            $table->integer('semester');
+        Schema::create('penilaians', function (Blueprint $table) {
+            $table->id();
             $table->timestamps();
         });
     }
@@ -25,6 +22,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('mk_plhn');
+        Schema::dropIfExists('penilaians');
     }
 };

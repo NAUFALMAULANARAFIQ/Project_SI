@@ -3,25 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hasil Kelompok - SPK TOPSIS</title>
+    <title>Hasil Kelompok (GDSS) - SPK TOPSIS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #F1F3E0; }
-        .bg-primary { background-color: #778873; } /* Hijau Gelap */
+        .bg-primary { background-color: #778873; }
         .text-primary { color: #778873; }
-        .bg-secondary { background-color: #A1BC98; } /* Hijau Sedang */
-        .sidebar { background-color: #5d6b59; /* Hijau Sangat Gelap */ }
+        .bg-secondary { background-color: #A1BC98; }
+        .sidebar { background-color: #5d6b59; }
         .active-link { background-color: rgba(161, 188, 152, 0.3); color: #F1F3E0; font-weight: 600; }
-        .card-bg { background-color: #ffffff; border-top: 4px solid #A1BC98; }
         .card-shadow { box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05), 0 4px 6px -2px rgba(0,0,0,0.03); }
+        .table-header { background-color: #D2DCB6; }
     </style>
 </head>
 <body>
     <div class="flex h-screen overflow-hidden">
 
-        <!-- Sidebar Navigation (DM) -->
-        <aside class="w-64 sidebar text-white flex-shrink-0 z-20 shadow-xl overflow-y-auto">
+         <aside class="w-64 sidebar text-white flex-shrink-0 z-20 shadow-xl overflow-y-auto">
             <div class="p-6 pb-4 border-b border-gray-600/50">
                 <h1 class="text-2xl font-bold tracking-wider text-white">GDSS</h1>
             </div>
@@ -76,7 +75,7 @@
                     <span class="ml-3">Laporan</span>
                 </a>
 
-                <div class="pt-4 mt-2 border-t border-gray-600/50">
+                 <div class="pt-4 mt-2 border-t border-gray-600/50">
                      <!-- Profil Saya -->
                     <a href="#" class="flex items-center p-3 rounded-lg hover:bg-secondary/30 transition duration-150">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -92,69 +91,117 @@
             </nav>
         </aside>
 
-        <!-- Main Content Area -->
         <main class="flex-1 overflow-y-auto bg-[#fdfdfd]">
             <header class="bg-white shadow-sm h-16 flex items-center justify-between px-6 sticky top-0 z-10 border-b border-gray-100">
-                <h2 class="text-xl font-semibold text-primary">Hasil Perhitungan Kelompok (Konsensus Borda)</h2>
+                <h2 class="text-xl font-semibold text-primary">Hasil Keputusan Kelompok (GDSS)</h2>
                 <div class="flex items-center space-x-3 text-primary">
-                    <span class="text-sm font-medium text-gray-600">Decision Maker 1 (Kaprodi)</span>
+                    <span class="text-sm font-medium text-gray-600">
+                        {{ Auth::user()->nama ?? Auth::user()->username }}
+                        ({{ Auth::user()->level_user == 'ketua' ? 'Kaprodi' : 'Dosen' }})
+                    </span>
                 </div>
             </header>
 
-            <!-- Page Content -->
             <div class="p-8">
-                <div class="bg-white p-8 rounded-xl card-shadow border-t-4 border-secondary">
-                    <h1 class="text-2xl font-bold text-primary mb-6">Peringkat Matakuliah Pilihan (Keputusan GDSS)</h1>
-                    <p class="mb-6 text-gray-600">Hasil ini adalah konsensus akhir dari **3 Decision Maker** yang terdaftar, dengan bobot yang lebih tinggi pada penilaian Kaprodi (Jabatan Tertinggi) sesuai Metode Borda.</p>
-
-                    <!-- Ringkasan Proses -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                        <div class="bg-D2DCB6 p-4 rounded-lg shadow-sm">
-                            <p class="text-sm font-semibold text-gray-700">Total Decision Maker</p>
-                            <p class="text-xl font-bold text-primary">5 Orang</p>
-                        </div>
-                        <div class="bg-D2DCB6 p-4 rounded-lg shadow-sm">
-                            <p class="text-sm font-semibold text-gray-700">Metode Konsensus</p>
-                            <p class="text-xl font-bold text-primary">TOPSIS + Borda Voting</p>
-                        </div>
-                        <div class="bg-D2DCB6 p-4 rounded-lg shadow-sm">
-                            <p class="text-sm font-semibold text-gray-700">Status Konsensus</p>
-                            <p class="text-xl font-bold text-primary">Telah Selesai</p>
-                        </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-primary">
+                        <h3 class="text-gray-500 text-sm uppercase font-bold mb-2">Rekomendasi Utama</h3>
+                        @if($rankings->isNotEmpty())
+                            <p class="text-3xl font-bold text-primary">{{ $rankings->first()->nama_mp }}</p>
+                            <p class="text-sm text-gray-600">Skor Gabungan: {{ number_format($rankings->first()->nilai_akhir, 5) }}</p>
+                        @else
+                            <p class="text-xl text-gray-400">Belum ada data</p>
+                        @endif
                     </div>
 
-                    <!-- Ranking Table -->
-                    <div class="overflow-x-auto rounded-lg border border-gray-200 card-shadow">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead>
-                                <tr class="table-header">
-                                    <th class="px-6 py-3 text-center text-xs font-semibold text-primary uppercase tracking-wider">Rangking</th>
-                                    <th class="px-6 py-3 text-left text-xs font-semibold text-primary uppercase tracking-wider">Nama Alternatif (Matakuliah)</th>
-                                    <th class="px-6 py-3 text-center text-xs font-semibold text-primary uppercase tracking-wider">Skor Konsensus (Borda)</th>
+                    <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-secondary">
+                        <h3 class="text-gray-500 text-sm uppercase font-bold mb-2">Partisipan Penilai</h3>
+                        <div class="flex flex-wrap gap-2">
+                            @forelse($voters as $voter)
+                                <span class="bg-[#D2DCB6] text-primary px-3 py-1 rounded-full text-xs font-semibold">
+                                    {{ $voter->nama ?? $voter->username }} ({{ $voter->level_user == 'ketua' ? 'Kaprodi' : 'Dosen' }})
+                                </span>
+                            @empty
+                                <span class="text-gray-400 text-sm">Belum ada yang menilai</span>
+                            @endforelse
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-8 rounded-xl card-shadow border-t-4 border-primary">
+                    <h1 class="text-2xl font-bold text-primary mb-2">Peringkat Akhir (Agregasi Kelompok)</h1>
+                    <p class="mb-6 text-gray-600 text-sm">Hasil ini diperoleh dari penggabungan nilai preferensi seluruh Decision Maker.</p>
+                <div class="overflow-x-auto rounded-lg border border-gray-200 card-shadow">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead>
+                            <tr class="table-header">
+                                <th class="px-6 py-3 text-center text-xs font-semibold text-primary uppercase tracking-wider w-24">
+                                    Peringkat
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-primary uppercase tracking-wider">
+                                    Kode MK
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-primary uppercase tracking-wider">
+                                    Nama Matakuliah
+                                </th>
+                                <th class="px-6 py-3 text-center text-xs font-semibold text-primary uppercase tracking-wider">
+                                    Jml Penilai
+                                </th>
+                                <th class="px-6 py-3 text-center text-xs font-semibold text-primary uppercase tracking-wider">
+                                    Nilai Akhir
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            @forelse($rankings as $rank)
+                                <tr class="hover:bg-gray-50 transition duration-150">
+
+                                    <td class="px-6 py-4 whitespace-nowrap text-center">
+                                        @if($loop->iteration == 1)
+                                            <div class="mx-auto w-10 h-10 rounded-full bg-yellow-100 text-yellow-700 border-2 border-yellow-300 flex items-center justify-center font-bold shadow-sm">
+                                                #1
+                                            </div>
+                                        @elseif($loop->iteration == 2)
+                                            <div class="mx-auto w-10 h-10 rounded-full bg-gray-100 text-gray-600 border-2 border-gray-300 flex items-center justify-center font-bold shadow-sm">
+                                                #2
+                                            </div>
+                                        @elseif($loop->iteration == 3)
+                                            <div class="mx-auto w-10 h-10 rounded-full bg-orange-100 text-orange-700 border-2 border-orange-200 flex items-center justify-center font-bold shadow-sm">
+                                                #3
+                                            </div>
+                                        @else
+                                            <span class="text-gray-500 font-semibold font-mono text-lg">
+                                                #{{ $loop->iteration }}
+                                            </span>
+                                        @endif
+                                    </td>
+
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800">
+                                        {{ $rank->kode_mp }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 font-semibold">
+                                        {{ $rank->nama_mp }}
+                                    </td>
+
+                                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-600">
+                                        {{ $rank->jumlah_pemilih }} Orang
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-bold text-primary text-lg">
+                                        {{ number_format($rank->nilai_akhir, 5) }}
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
-                                <!-- Tatakelola dan Audit Sistem Informasi - Rank 1 (Contoh Kasus VI) -->
-                                <tr class="bg-green-100/50">
-                                    <td class="px-6 py-4 whitespace-nowrap text-center text-2xl font-extrabold text-primary">#1</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-lg font-bold text-primary">Tatakelola dan Audit Sistem Informasi</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium text-gray-800">12.5</td>
-                                </tr>
-                                <!-- Pengolahan Citra Digital - Rank 2 -->
+                            @empty
                                 <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap text-center text-xl font-bold text-secondary">#2</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-base font-semibold text-gray-800">Pengolahan Citra Digital</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium text-gray-800">9.0</td>
+                                    <td colspan="6" class="px-6 py-12 text-center">
+                                        <div class="flex flex-col items-center justify-center text-gray-400">
+                                            <svg class="w-12 h-12 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                            <span class="text-lg font-medium">Belum ada data perhitungan yang masuk.</span>
+                                        </div>
+                                    </td>
                                 </tr>
-                                <!-- Data Mining - Rank 3 -->
-                                <tr class="bg-gray-50">
-                                    <td class="px-6 py-4 whitespace-nowrap text-center text-lg font-semibold text-gray-700">#3</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-base font-medium text-gray-700">Data Mining</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium text-gray-800">8.5</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </main>

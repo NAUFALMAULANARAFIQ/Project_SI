@@ -62,7 +62,10 @@
             <header class="bg-white shadow-md h-16 flex items-center justify-between px-6 sticky top-0 z-10">
                 <h2 class="text-xl font-semibold text-primary">Input Penilaian Matakuliah Pilihan</h2>
                 <div class="flex items-center space-x-3">
-                    <span class="text-sm font-medium text-gray-600">NIM: 123456 (Decision Maker 1)</span>
+                     <span class="text-sm font-medium text-gray-600">
+                        {{ Auth::user()->nama ?? Auth::user()->username }}
+                        ({{ Auth::user()->level_user == 'ketua' ? 'Kaprodi' : 'Dosen' }})
+                    </span>
                 </div>
             </header>
 
@@ -71,17 +74,16 @@
                 <div class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-secondary">
                     <h1 class="text-2xl font-bold text-primary mb-6">Penilaian Individual Kriteria Matakuliah</h1>
 
-                    <form class="space-y-8">
+                    <form id="perhitungan-form" class="space-y-8" method="POST" action="{{ route('perhitungan.store') }}">
+                        @csrf
+                        <input type="hidden" name="id_user" id="id_user_input" value="{{ session('user_session')->id ?? '' }}">
 
                         <!-- Pilihan Matakuliah -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center border-b pb-4">
                             <label for="matakuliah_pilihan" class="text-lg font-semibold text-gray-700">Pilih Matakuliah:</label>
                             <select id="matakuliah_pilihan" name="matakuliah_pilihan"
                                 class="w-full p-3 border-2 border-D2DCB6 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition duration-150">
-                                <option>-- Pilih Matakuliah Pilihan --</option>
-                                <option value="A1">Pengolahan Citra Digital (A1)</option>
-                                <option value="A2">Perancangan Sumber Daya Perusahaan (A2)</option>
-                                <option value="A3">Data Mining (A3)</option>
+                                <option value="">-- Memuat matakuliah... --</option>
                             </select>
                         </div>
 
@@ -89,47 +91,8 @@
                         <div class="space-y-6">
                             <h2 class="text-xl font-bold text-secondary border-b-2 border-D2DCB6 pb-2">Nilai Kriteria (Skala 1 - 5)</h2>
 
-                            <!-- Kriteria C1: Tingkat Kesulitan (Cost) -->
-                            <div>
-                                <label for="c1" class="block text-sm font-medium text-gray-700 mb-1">C1: Tingkat Kesulitan (Cost)</label>
-                                <select id="c1" name="c1" required
-                                    class="w-full p-3 border-2 border-D2DCB6 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition duration-150">
-                                    <option value="">-- Beri Nilai 1-5 --</option>
-                                    <option value="1">1 - Sangat Rendah</option>
-                                    <option value="2">2 - Rendah</option>
-                                    <option value="3">3 - Cukup Tinggi</option>
-                                    <option value="4">4 - Tinggi</option>
-                                    <option value="5">5 - Sangat Tinggi</option>
-                                </select>
-                            </div>
-
-                            <!-- Kriteria C2: Referensi (Benefit) -->
-                            <div>
-                                <label for="c2" class="block text-sm font-medium text-gray-700 mb-1">C2: Referensi (Benefit)</label>
-                                <select id="c2" name="c2" required
-                                    class="w-full p-3 border-2 border-D2DCB6 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition duration-150">
-                                    <option value="">-- Beri Nilai 1-5 --</option>
-                                    <option value="1">1 - Sangat Rendah</option>
-                                    <option value="2">2 - Rendah</option>
-                                    <option value="3">3 - Cukup Tinggi</option>
-                                    <option value="4">4 - Tinggi</option>
-                                    <option value="5">5 - Sangat Tinggi</option>
-                                </select>
-                            </div>
-
-                            <!-- Kriteria C3: Lapangan Pekerjaan (Benefit) -->
-                            <div>
-                                <label for="c3" class="block text-sm font-medium text-gray-700 mb-1">C3: Lapangan Pekerjaan (Benefit)</label>
-                                <select id="c3" name="c3" required
-                                    class="w-full p-3 border-2 border-D2DCB6 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition duration-150">
-                                    <option value="">-- Beri Nilai 1-5 --</option>
-                                    <option value="1">1 - Sangat Rendah</option>
-                                    <option value="2">2 - Rendah</option>
-                                    <option value="3">3 - Cukup Tinggi</option>
-                                    <option value="4">4 - Tinggi</option>
-                                    <option value="5">5 - Sangat Tinggi</option>
-                                </select>
-                            </div>
+                            <!-- Kriteria container populated by JS -->
+                            <div id="kriteria-container" class="grid grid-cols-1 gap-4"></div>
 
                         </div>
 
@@ -146,5 +109,101 @@
             </div>
         </main>
     </div>
+    <script>
+        // Load alternatives (matakuliah) and kriteria, then build the form dynamically
+        async function fetchAlternatives() {
+            try {
+                const res = await window.axios.get('/api/mk-plhn');
+                return Array.isArray(res.data) ? res.data : [];
+            } catch (err) { console.error('Failed to load alternatives', err); return []; }
+        }
+
+        async function fetchKriteria() {
+            try {
+                const res = await window.axios.get('/api/kriteria');
+                return Array.isArray(res.data) ? res.data : [];
+            } catch (err) { console.error('Failed to load kriteria', err); return []; }
+        }
+
+        function buildKriteriaInputs(kriteriaList) {
+            const container = document.getElementById('kriteria-container');
+            container.innerHTML = '';
+            kriteriaList.forEach((k, idx) => {
+                const kode = k.kode_kriteria || k.kode || ('C' + (idx+1));
+                const id = k.id_kriteria || k.id;
+                const labelText = `${kode}: ${k.nama_kriteria || k.nama}`;
+                const select = document.createElement('select');
+                select.name = `k_${id}`;
+                select.id = `k_${id}`;
+                select.required = true;
+                select.className = 'w-full p-3 border-2 border-D2DCB6 rounded-lg';
+                select.innerHTML = `
+                    <option value="">-- Beri Nilai 1-5 --</option>
+                    <option value="1">1 - Sangat Rendah</option>
+                    <option value="2">2 - Rendah</option>
+                    <option value="3">3 - Cukup Tinggi</option>
+                    <option value="4">4 - Tinggi</option>
+                    <option value="5">5 - Sangat Tinggi</option>
+                `;
+
+                const wrapper = document.createElement('div');
+                wrapper.innerHTML = `<label class="block text-sm font-medium text-gray-700 mb-1">${labelText}</label>`;
+                wrapper.appendChild(select);
+                container.appendChild(wrapper);
+            });
+        }
+
+        async function populateForm() {
+            const [alts, kr] = await Promise.all([fetchAlternatives(), fetchKriteria()]);
+
+            // Populate alternatives select
+            const altSelect = document.getElementById('matakuliah_pilihan');
+            altSelect.innerHTML = '<option value="">-- Pilih Matakuliah Pilihan --</option>';
+            alts.forEach(a => {
+                const opt = document.createElement('option');
+                opt.value = a.id_mp || a.id;
+                opt.textContent = `${a.kode_mp || ''} ${a.nama_mp || a.nama}`.trim();
+                altSelect.appendChild(opt);
+            });
+
+            // Build kriteria inputs
+            buildKriteriaInputs(kr);
+        }
+
+        // Submit form via axios
+        document.getElementById('perhitungan-form').addEventListener('submit', async function(e){
+            e.preventDefault();
+            const form = e.target;
+            const id_user = document.getElementById('id_user_input').value || null;
+            const id_mp = document.getElementById('matakuliah_pilihan').value;
+            if (!id_mp) { alert('Pilih matakuliah terlebih dahulu'); return; }
+
+            // Collect kriteria values
+            const payloadDetails = [];
+            const selects = document.querySelectorAll('#kriteria-container select');
+            selects.forEach(s => {
+                const key = s.name; // k_<id>
+                const id_k = key.split('_')[1];
+                payloadDetails.push({ id_kriteria: id_k, nilai: Number(s.value) });
+            });
+
+            // Minimal payload to Perhitungan store: id_user, id_mp, hasil (we will attach details separately via API if needed)
+            try {
+                const res = await window.axios.post('{{ route('perhitungan.store') }}', {
+                    id_user: id_user,
+                    id_mp: id_mp,
+                    hasil: null,
+                    details: payloadDetails
+                });
+                // On success, redirect to hasil page or show message
+                window.location.href = '/mahasiswa/hasil';
+            } catch (err) {
+                console.error('Gagal menyimpan perhitungan', err);
+                alert('Gagal menyimpan perhitungan. Cek konsol untuk detail.');
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', populateForm);
+    </script>
 </body>
 </html>

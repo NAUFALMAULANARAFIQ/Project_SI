@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Perhitungan_Detail extends Model
 {
     use HasFactory;
-
+    protected $table = 'perhitungan_details';
     protected $fillable = [
         'id_perhitungan',
         'id_kriteria',

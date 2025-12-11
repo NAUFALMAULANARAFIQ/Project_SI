@@ -3,9 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Auth; // Wajib import ini
+use App\Models\User; // Gunakan Model User, jangan DB facade
 
 class AuthController extends Controller
 {
@@ -17,42 +16,49 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         // 1. Validasi Input
-        $request->validate([
+        $credentials = $request->validate([
             'username' => 'required',
             'password' => 'required'
         ]);
 
-        // 2. Cari User di Database (Query Manual)
-        $user = DB::table('users')->where('username', $request->username)->first();
+        // 2. Cari User menggunakan Eloquent Model
+        // Penting pakai Model User agar primaryKey 'id_user' terbaca otomatis
+        $user = User::where('username', $request->username)->first();
 
-        // Jika user tidak ketemu
-        if (!$user) {
-            return back()->withErrors(['username' => 'Username tidak terdaftar.']);
+        // 3. Cek apakah user ada & password benar
+        if ($user && \Illuminate\Support\Facades\Hash::check($request->password, $user->password)) {
+
+            // --- INI KUNCINYA BEB ---
+            // Kita suruh Laravel login secara resmi menggunakan object User
+            Auth::login($user);
+
+            // Regenerate session untuk keamanan (mencegah session fixation)
+            $request->session()->regenerate();
+
+            // 4. Redirect Sesuai Level
+            if ($user->level_user === 'ketua') {
+                return redirect()->route('admin.dashboard');
+            } else {
+                // Asumsi dosen/anggota juga masuk dashboard atau halaman lain
+                return redirect()->route('admin.dashboard');
+            }
         }
 
-        // 3. Cek Password (Manual Hash Check)
-        if (!Hash::check($request->password, $user->password)) {
-            return back()->withErrors(['password' => 'Password salah.']);
-        }
-
-        // 4. Login Berhasil -> Simpan Sesi Manual
-        // Kita simpan seluruh object user ke dalam session bernama 'user_session'
-        Session::put('user_session', $user);
-        Session::save(); // Paksa simpan agar tidak hilang saat redirect
-
-        // 5. Redirect Sesuai Level
-        if ($user->level_user === 'ketua') {
-            return redirect()->route('ketua.dashboard');
-        } else {
-            return redirect()->route('perhitungan.create');
-        }
+        // Jika login gagal
+        return back()->withErrors([
+            'username' => 'Username atau password salah.',
+        ])->onlyInput('username');
     }
 
     public function logout(Request $request)
     {
-        // Hapus Sesi Manual
-        Session::forget('user_session');
-        Session::flush();
+        // Logout resmi Laravel
+        Auth::logout();
+
+        // Hapus session
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
         return redirect()->route('login');
     }
 }

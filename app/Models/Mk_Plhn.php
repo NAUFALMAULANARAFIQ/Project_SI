@@ -10,10 +10,12 @@ class Mk_Plhn extends Model
     use HasFactory;
 
     protected $table = 'mk_plhn';
+    protected $primaryKey = 'id_mp';
 
     protected $fillable = [
         'kode_mp',
         'nama_mp',
+        'sks',
         'semester',
     ];
 

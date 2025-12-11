@@ -31,7 +31,8 @@
         <p class="text-center text-gray-600">Sistem Pendukung Keputusan Matakuliah Pilihan</p>
 
         <!-- Form Login -->
-        <form class="space-y-4">
+        <form class="space-y-4" method="POST" action="{{ route('login.post') }}">
+            @csrf
             <!-- Username Input -->
             <div>
                 <label for="username" class="sr-only">Username</label>

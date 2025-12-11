@@ -6,22 +6,28 @@
     <title>Laporan - SPK TOPSIS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        /* ... Style sama seperti sebelumnya ... */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #F1F3E0; }
-        .bg-primary { background-color: #778873; } /* Hijau Gelap */
+        .bg-primary { background-color: #778873; }
         .text-primary { color: #778873; }
-        .bg-secondary { background-color: #A1BC98; } /* Hijau Sedang */
-        .sidebar { background-color: #5d6b59; /* Hijau Sangat Gelap */ }
+        .bg-secondary { background-color: #A1BC98; }
+        .sidebar { background-color: #5d6b59; }
         .active-link { background-color: rgba(161, 188, 152, 0.3); color: #F1F3E0; font-weight: 600; }
-        .card-bg { background-color: #ffffff; border-top: 4px solid #A1BC98; }
         .card-shadow { box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05), 0 4px 6px -2px rgba(0,0,0,0.03); }
+        .select-custom {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23778873' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.7rem center;
+            background-size: 1.5em;
+            padding-right: 2.5rem;
+        }
     </style>
 </head>
 <body>
     <div class="flex h-screen overflow-hidden">
-
-        <!-- Sidebar Navigation (DM) -->
-        <aside class="w-64 sidebar text-white flex-shrink-0 z-20 shadow-xl overflow-y-auto">
+               <aside class="w-64 sidebar text-white flex-shrink-0 z-20 shadow-xl overflow-y-auto">
             <div class="p-6 pb-4 border-b border-gray-600/50">
                 <h1 class="text-2xl font-bold tracking-wider text-white">GDSS</h1>
             </div>
@@ -76,7 +82,7 @@
                     <span class="ml-3">Laporan</span>
                 </a>
 
-                <div class="pt-4 mt-2 border-t border-gray-600/50">
+                 <div class="pt-4 mt-2 border-t border-gray-600/50">
                      <!-- Profil Saya -->
                     <a href="#" class="flex items-center p-3 rounded-lg hover:bg-secondary/30 transition duration-150">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -91,50 +97,51 @@
                 </div>
             </nav>
         </aside>
-
-        <!-- Main Content Area -->
         <main class="flex-1 overflow-y-auto bg-[#fdfdfd]">
             <header class="bg-white shadow-sm h-16 flex items-center justify-between px-6 sticky top-0 z-10 border-b border-gray-100">
                 <h2 class="text-xl font-semibold text-primary">Cetak Laporan Hasil</h2>
                 <div class="flex items-center space-x-3 text-primary">
-                    <span class="text-sm font-medium text-gray-600">Decision Maker 1 (Kaprodi)</span>
+                    <span class="text-sm font-medium text-gray-600">
+                        @if(Auth::check())
+                            {{ Auth::user()->nama ?? Auth::user()->username }}
+                        @else
+                            Tamu
+                        @endif
+                    </span>
                 </div>
             </header>
 
-            <!-- Page Content -->
             <div class="p-8">
                 <div class="bg-white p-8 rounded-xl card-shadow border-t-4 border-primary">
                     <h1 class="text-2xl font-bold text-primary mb-6">Pilih Opsi Laporan</h1>
 
-                    <form class="space-y-6">
+                    <form action="{{ route('admin.laporan.cetak') }}" method="POST" target="_blank" class="space-y-6">
+                        @csrf
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                             <div>
+                            <div>
                                 <label for="jenis_laporan" class="block text-sm font-semibold text-gray-700 mb-1">Jenis Laporan:</label>
-                                <select id="jenis_laporan" class="w-full p-3 border-2 border-gray-300 rounded-lg select-custom focus:border-primary focus:ring-primary">
+                                <select name="jenis_laporan" class="w-full p-3 border-2 border-gray-300 rounded-lg select-custom focus:border-primary focus:ring-primary">
                                     <option value="individu">Laporan Hasil Individu</option>
                                     <option value="kelompok">Laporan Hasil Konsensus Kelompok</option>
-                                    <option value="all">Laporan Proses Perhitungan Lengkap (TOPSIS)</option>
                                 </select>
                             </div>
                             <div>
                                 <label for="semester_laporan" class="block text-sm font-semibold text-gray-700 mb-1">Semester:</label>
-                                <select id="semester_laporan" class="w-full p-3 border-2 border-gray-300 rounded-lg select-custom focus:border-primary focus:ring-primary">
-                                    <option value="4">Semester IV</option>
-                                    <option value="5">Semester V</option>
-                                    <option value="6">Semester VI</option>
+                                <select name="semester_laporan" class="w-full p-3 border-2 border-gray-300 rounded-lg select-custom focus:border-primary focus:ring-primary">
+                                    @foreach([4,5,6,7,8] as $s)
+                                        <option value="{{ $s }}">Semester {{ $s }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                         </div>
 
-                        <!-- Tombol Cetak -->
                         <div class="flex justify-end pt-4">
-                            <button type="submit"
-                                    class="px-6 py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition duration-200 card-shadow">
-                                <span class="flex items-center"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v7H6z"/></svg> Cetak Laporan (PDF)</span>
+                            <button type="submit" class="px-6 py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition duration-200 card-shadow flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v7H6z"/></svg>
+                                Cetak Laporan (PDF)
                             </button>
                         </div>
                     </form>
-
                 </div>
             </div>
         </main>

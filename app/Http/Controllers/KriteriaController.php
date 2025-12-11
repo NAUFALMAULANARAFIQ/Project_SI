@@ -23,14 +23,14 @@ class KriteriaController extends Controller
         $request->validate([
             // 'id_kriteria' => 'required|unique:kriteria,id_kriteria',
             'nama' => 'required',
-            'cost_benefit' => 'required|in:Benefit,Cost',
+            'sifat' => 'required|in:Benefit,Cost',
             'bobot' => 'required|numeric|min:1|max:5',
         ]);
 
         Kriteria::create([
             // 'id_kriteria' => strtoupper($request->id_kriteria), // Simpan C1, C2 huruf besar
             'nama_kriteria' => $request->nama,
-            'cost_benefit' => $request->cost_benefit,
+            'sifat' => $request->sifat,
             'bobot' => $request->bobot,
         ]);
 
@@ -44,14 +44,14 @@ class KriteriaController extends Controller
         $request->validate([
             // 'id_kriteria' => 'required|exists:kriteria,id_kriteria', // sesuaikan id_kriteria dgn primary key
             'nama' => 'required',
-            'cost_benefit' => 'required|in:Benefit,Cost',
+            'sifat' => 'required|in:Benefit,Cost',
             'bobot' => 'required|numeric|min:1|max:5',
         ]);
 
         $kriteria->update([
             // 'id_kriteria' => strtoupper($request->id_kriteria),
             'nama_kriteria' => $request->nama,
-            'cost_benefit' => $request->cost_benefit,
+            'sifat' => $request->sifat,
             'bobot' => $request->bobot,
         ]);
 

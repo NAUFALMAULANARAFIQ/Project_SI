@@ -149,7 +149,7 @@
                                     <th class="px-6 py-3 text-left text-xs font-semibold text-primary uppercase">No</th>
                                     <th class="px-6 py-3 text-left text-xs font-semibold text-primary uppercase">Kode</th>
                                     <th class="px-6 py-3 text-left text-xs font-semibold text-primary uppercase">Nama Kriteria</th>
-                                    <th class="px-6 py-3 text-left text-xs font-semibold text-primary uppercase">Cost-Benefit</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-primary uppercase">Sifat</th>
                                     <th class="px-6 py-3 text-center text-xs font-semibold text-primary uppercase">Bobot (W)</th>
                                     @if(Auth::user()->level_user == 'ketua')
                                     <th class="px-6 py-3 text-center text-xs font-semibold text-primary uppercase">Aksi</th>
@@ -162,8 +162,8 @@
                                     <td class="px-6 py-4 text-sm text-gray-600">{{ $index + 1 }}</td>
                                     <td class="px-6 py-4 text-sm font-medium text-gray-800">{{ $item->id_kriteria }}</td>
                                     <td class="px-6 py-4 text-sm text-gray-800">{{ $item->nama_kriteria }}</td>
-                                    <td class="px-6 py-4 text-sm font-semibold {{ $item->cost_benefit == 'Cost' ? 'text-red-500' : 'text-green-600' }}">
-                                        {{ $item->cost_benefit }}
+                                    <td class="px-6 py-4 text-sm font-semibold {{ $item->sifat == 'Cost' ? 'text-red-500' : 'text-green-600' }}">
+                                        {{ $item->sifat }}
                                     </td>
                                     <td class="px-6 py-4 text-center text-sm font-bold text-primary">{{ $item->bobot }}</td>
                                     @if(Auth::user()->level_user == 'ketua')

@@ -5,79 +5,94 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
-use App\Models\Perhitungan; // Pastikan import model ini
 
 class HasilKelompokController extends Controller
 {
     public function index()
     {
-        // 1. Ambil SEMUA data hasil perhitungan
-        // Kita tidak bisa langsung pakai GroupBy di SQL karena butuh logic ranking per user dulu
+        // 1. AMBIL DATA
         $semuaData = DB::table('perhitungan')
             ->join('mk_plhn', 'perhitungan.id_mp', '=', 'mk_plhn.id_mp')
             ->select('perhitungan.*', 'mk_plhn.nama_mp', 'mk_plhn.kode_mp')
             ->get();
 
-        // 2. Kelompokkan Data Per User (Agar bisa kita ranking per orang)
+        // Cari tahu maksimal ranking (biasanya sama dengan jumlah matkul unik)
+        // Ini buat nentuin jumlah kolom 1, 2, 3 dst
+        $totalKandidat = $semuaData->unique('id_mp')->count();
+
+        // 2. KELOMPOKKAN PER USER
         $dataPerUser = $semuaData->groupBy('id_user');
 
-        // Array penampung Skor Borda
-        // Format: [id_mp => Total Poin]
-        $bordaScores = [];
+        $bordaScores = []; // Untuk Poin Borda (Weighted)
+        $matrixSkor  = [];
+        $infoMP      = [];
 
-        // Array bantu buat nyimpen Nama & Kode MP biar gak hilang
-        $infoMP = [];
-
-        // 3. LOGIC BORDA START
         foreach ($dataPerUser as $userId => $items) {
-            // Urutkan matakuliah user ini berdasarkan nilai TOPSIS tertinggi (Ranking 1 paling atas)
+            // Urutkan nilai TOPSIS user (Ranking 1 paling atas)
             $sortedItems = $items->sortByDesc('hasil')->values();
 
-            // Hitung jumlah item yang dinilai user ini (untuk penentuan poin maksimal)
-            $count = $sortedItems->count();
+            // Hitung jumlah item yang dinilai user ini untuk penentuan bobot
+            $jumlahItemUser = $sortedItems->count();
 
             foreach ($sortedItems as $index => $item) {
-                // Simpan info matakuliah (buat ditampilkan nanti)
-                $infoMP[$item->id_mp] = [
-                    'nama_mp' => $item->nama_mp,
-                    'kode_mp' => $item->kode_mp
-                ];
+                // Simpan info MP
+                if (!isset($infoMP[$item->id_mp])) {
+                    $infoMP[$item->id_mp] = [
+                        'nama_mp' => $item->nama_mp,
+                        'kode_mp' => $item->kode_mp
+                    ];
+                }
 
-                // RUMUS BORDA:
-                // Poin = (Jumlah Item - Index Ranking)
-                // Contoh: Ada 5 Mapel.
-                // Ranking 1 (index 0) -> Poin = 5 - 0 = 5
-                // Ranking 5 (index 4) -> Poin = 5 - 4 = 1
-                $poin = $count - $index;
+                // Tentukan Ranking (1, 2, 3...)
+                // index 0 = Rank 1, index 1 = Rank 2
+                $rankingPosisi = $index + 1;
 
-                // Jumlahkan poin ke matakuliah tersebut
+                // --- 1. SIMPAN SKOR KE MATRIX (Untuk Kolom 1, 2, 3) ---
+                if (!isset($matrixSkor[$item->id_mp][$rankingPosisi])) {
+                    $matrixSkor[$item->id_mp][$rankingPosisi] = 0;
+                }
+                // Kita jumlahkan skor aslinya di posisi rank tersebut
+                // (Ini biar angka 1,345589 muncul di kolom Ranking 2 kayak di Excel)
+                $matrixSkor[$item->id_mp][$rankingPosisi] += $item->hasil;
+
+
+                // --- 2. HITUNG POIN BORDA (Weighted) ---
+                // Bobot = (Jumlah Item User - Index)
+                // Misal Rank 1 dari 3 item = bobot 3. Rank 2 = bobot 2.
+                $bobotRanking = $jumlahItemUser - $index;
+
+                // Poin = Skor Asli * Bobot
+                $poinHitung = $item->hasil * $bobotRanking;
+
+                // Akumulasi Poin Borda
                 if (!isset($bordaScores[$item->id_mp])) {
                     $bordaScores[$item->id_mp] = 0;
                 }
-                $bordaScores[$item->id_mp] += $poin;
+                $bordaScores[$item->id_mp] += $poinHitung;
             }
         }
 
-        // 4. Urutkan Hasil Akhir (Poin Tertinggi diatas)
-        arsort($bordaScores);
+        // 3. HITUNG TOTAL & NORMALISASI
+        $grandTotalPoin = array_sum($bordaScores);
 
-        // 5. Format Data Agar Bisa Dibaca View (Disamakan strukturnya kayak kodingan lamamu)
         $rankings = [];
         foreach ($bordaScores as $id_mp => $totalPoin) {
+            $nilaiAkhir = ($grandTotalPoin > 0) ? ($totalPoin / $grandTotalPoin) : 0;
+
             $rankings[] = (object) [
-                'nama_mp' => $infoMP[$id_mp]['nama_mp'],
-                'kode_mp' => $infoMP[$id_mp]['kode_mp'],
-                'nilai_akhir' => $totalPoin, // Ini sekarang adalah Total Poin Borda
-                'jumlah_pemilih' => $semuaData->where('id_mp', $id_mp)->count() // Info tambahan
+                'id_mp'        => $id_mp,
+                'nama_mp'      => $infoMP[$id_mp]['nama_mp'],
+                'kode_mp'      => $infoMP[$id_mp]['kode_mp'],
+                'poin_borda'   => $totalPoin,
+                'nilai_akhir'  => $nilaiAkhir,
+                'detail_rank'  => $matrixSkor[$id_mp] ?? []
             ];
         }
 
-        // Convert array ke Collection biar view-nya gak error kalau pakai method collection
-        $rankings = collect($rankings);
-
-        // Ambil Info Siapa Saja yang Sudah Menilai
+        // Urutkan berdasarkan Nilai Akhir
+        $rankings = collect($rankings)->sortByDesc('nilai_akhir')->values();
         $voters = User::whereIn('id_user', $semuaData->pluck('id_user')->unique())->get();
 
-        return view('admin.hasil_kelompok', compact('rankings', 'voters'));
+        return view('admin.hasil_kelompok', compact('rankings', 'voters', 'totalKandidat'));
     }
 }

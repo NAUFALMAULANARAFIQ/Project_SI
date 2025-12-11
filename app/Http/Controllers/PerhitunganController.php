@@ -2,158 +2,234 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Penilaian;
 use App\Models\Kriteria;
 use App\Models\Perhitungan;
-use Illuminate\Support\Facades\DB;
 
 class PerhitunganController extends Controller
 {
+    public function index()
+    {
+        $userId = Auth::id();
+        $rankings = DB::table('perhitungan')
+            ->join('mk_plhn', 'perhitungan.id_mp', '=', 'mk_plhn.id_mp')
+            ->where('perhitungan.id_user', $userId)
+            ->select('mk_plhn.nama_mp', 'mk_plhn.kode_mp', 'perhitungan.hasil as nilai_preferensi')
+            ->orderByDesc('nilai_preferensi')
+            ->get();
+
+        return view('admin.individu', compact('rankings'));
+    }
+
+    // --- LOGIKA TOPSIS (YANG SUDAH DIPERBAIKI SESUAI EXCEL) ---
     public static function hitungTopsis($userId)
     {
-        // ----------------------------------------------------------------------
-        // PERSIAPAN DATA (Sesuai Poin 1 & 3 di Excel)
-        // ----------------------------------------------------------------------
+        // ==========================================================================
+        // 1. PERSIAPAN: LOAD DATA KE ARRAY MATRIX (X)
+        // ==========================================================================
+        $kriterias = Kriteria::all();
+        $penilaians = Penilaian::where('id_user', $userId)->get();
 
-        // Ambil data penilaian milik user (Mahasiswa Semester IV)
-        $nilaiMentah = Penilaian::where('id_user', $userId)->get();
+        if ($penilaians->isEmpty()) return;
 
-        if ($nilaiMentah->isEmpty()) {
-            return;
+        // Susun Array Matriks X: $X[id_mp][id_kriteria] = nilai mentah
+        $X = [];
+        foreach ($penilaians as $p) {
+            $X[$p->id_mp][$p->id_kriteria] = $p->nilai;
         }
 
-        $kriterias = Kriteria::all();
+        // Ambil daftar Alternatif (Mata Kuliah)
+        $alternatifs = array_keys($X);
 
-        // Group data berdasarkan Alternatif (Mata Kuliah: A1, A2, A3)
-        // $dataMK = [ 'id_mp_A1' => [nilai C1, C2...], 'id_mp_A2' => [...] ]
-        $dataMK = $nilaiMentah->groupBy('id_mp');
-
-        // ----------------------------------------------------------------------
-        // TAHAP 1: PEMBAGI / NORMALISASI (Sesuai Poin 2 di Excel)
-        // Rumus: Akar dari penjumlahan kuadrat setiap kolom kriteria
-        // ----------------------------------------------------------------------
+        // ==========================================================================
+        // 2. TAHAP PEMBAGI (Mencari Akar Kuadrat Sigma)
+        // Ini adalah penyebutnya (contoh: Akar 50 = 7.071)
+        // ==========================================================================
         $pembagi = [];
 
         foreach ($kriterias as $k) {
             $id_k = $k->id_kriteria;
-
-            // Ambil kolom nilai untuk kriteria ini saja (misal kolom C1 untuk A1, A2, A3)
-            $nilaiKolom = $nilaiMentah->where('id_kriteria', $id_k)->pluck('nilai');
-
             $sumKuadrat = 0;
-            foreach ($nilaiKolom as $n) {
-                $sumKuadrat += pow($n, 2);
+
+            // Loop vertikal (per kolom kriteria)
+            foreach ($alternatifs as $id_mp) {
+                $nilai = $X[$id_mp][$id_k] ?? 0; // Contoh: 5, 3, 4
+                $sumKuadrat += pow($nilai, 2);   // 5^2 + 3^2 + 4^2
             }
 
-            // Contoh Excel C1: sqrt(5^2 + 3^2 + 4^2) = sqrt(50) = 7.071...
-            $pembagi[$id_k] = ($sumKuadrat > 0) ? sqrt($sumKuadrat) : 1;
+            // Simpan hasil Akar Kuadratnya
+            $pembagi[$id_k] = sqrt($sumKuadrat);
         }
-        // dd($pembagi);
 
-        // ----------------------------------------------------------------------
-        // TAHAP 2: MATRIKS TERNORMALISASI TERBOBOT (Sesuai Poin 5 di Excel)
-        // Rumus: (Nilai Asli / Pembagi) * Bobot Kriteria
-        // ----------------------------------------------------------------------
-        $matriksY = [];
-        $nilaiPerKriteriaY = []; // Array bantu untuk mencari Max/Min nanti
+        // ==========================================================================
+        // 3. MATRIKS TERNORMALISASI (R) & TERBOBOT (Y)
+        // Disinilah proses "5 dibagi Akar 50" terjadi!
+        // ==========================================================================
+        $Y = [];
+        $arrY_per_Kriteria = [];
 
-        foreach ($dataMK as $id_mp => $items) {
-            foreach ($items as $item) {
-                $id_k = $item->id_kriteria;
-                $val  = $item->nilai; // Nilai asli (misal 5)
+        foreach ($alternatifs as $id_mp) {
+            foreach ($kriterias as $k) {
+                $id_k = $k->id_kriteria;
+                $nilaiAsli = $X[$id_mp][$id_k] ?? 0; // Ini angkanya (misal: 5)
+                $div = $pembagi[$id_k];              // Ini pembaginya (misal: 7.071)
 
-                $currKriteria = $kriterias->where('id_kriteria', $id_k)->first();
-                if (!$currKriteria) continue;
+                // --- [RUMUS R: Normalisasi] ---
+                // "5 / Akar 50" terjadi disini:
+                $r = ($div > 0) ? ($nilaiAsli / $div) : 0;
 
-                // 1. Normalisasi (R)
-                $r = $val / $pembagi[$id_k];
+                // --- [RUMUS Y: Terbobot] ---
+                // Hasil tadi dikali bobot (misal 4)
+                $y_score = $r * $k->bobot;
 
-                // 2. Kali Bobot (Y)
-                // Pastikan bobot di DB tipe integer (4, 3, 3) bukan persen (0.4) agar sesuai Excel
-                $y = $r * $currKriteria->bobot;
-
-                // Simpan untuk perhitungan selanjutnya
-                $matriksY[$id_mp][$id_k] = $y;
-                $nilaiPerKriteriaY[$id_k][] = $y;
+                // Simpan hasilnya
+                $Y[$id_mp][$id_k] = $y_score;
+                $arrY_per_Kriteria[$id_k][] = $y_score;
             }
         }
 
-        // ----------------------------------------------------------------------
-        // TAHAP 3: SOLUSI IDEAL POSITIF & NEGATIF (Sesuai Poin 6 di Excel)
-        // C1 = Cost, C2-C5 = Benefit
-        // ----------------------------------------------------------------------
-        $A_Positif = [];
-        $A_Negatif = [];
+        // ==========================================================================
+        // 4. SOLUSI IDEAL A+ DAN A-
+        // ==========================================================================
+        $A_Plus = [];
+        $A_Min  = [];
 
         foreach ($kriterias as $k) {
             $id_k = $k->id_kriteria;
-            $kumpulanNilai = collect($nilaiPerKriteriaY[$id_k] ?? []);
+            $colValues = $arrY_per_Kriteria[$id_k] ?? [];
 
-            if ($kumpulanNilai->isEmpty()) {
-                $A_Positif[$id_k] = 0; $A_Negatif[$id_k] = 0;
-                continue;
+            if (empty($colValues)) {
+                $A_Plus[$id_k] = 0; $A_Min[$id_k] = 0; continue;
             }
 
-            // CEK SIFAT KRITERIA DARI DATABASE
-            // Pastikan kolom 'sifat' di tabel kriteria berisi 'Cost' atau 'Benefit'
             if (strcasecmp($k->sifat, 'Cost') == 0) {
-                // KASUS COST (Seperti C1 di Excel)
-                // Ideal Positif = Nilai Terkecil (Min)
-                // Ideal Negatif = Nilai Terbesar (Max)
-                $A_Positif[$id_k] = $kumpulanNilai->min();
-                $A_Negatif[$id_k] = $kumpulanNilai->max();
+                // Cost: Ideal(+) = Min, Ideal(-) = Max
+                $A_Plus[$id_k] = min($colValues);
+                $A_Min[$id_k]  = max($colValues);
             } else {
-                // KASUS BENEFIT (Seperti C2, C3, C4, C5 di Excel)
-                // Ideal Positif = Nilai Terbesar (Max)
-                // Ideal Negatif = Nilai Terkecil (Min)
-                $A_Positif[$id_k] = $kumpulanNilai->max();
-                $A_Negatif[$id_k] = $kumpulanNilai->min();
+                // Benefit: Ideal(+) = Max, Ideal(-) = Min
+                $A_Plus[$id_k] = max($colValues);
+                $A_Min[$id_k]  = min($colValues);
             }
         }
 
-        // ----------------------------------------------------------------------
-        // TAHAP 4 & 5: JARAK DAN SKOR PREFERENSI (Sesuai Poin 7 & 8 di Excel)
-        // ----------------------------------------------------------------------
-
-        foreach ($matriksY as $id_mp => $nilaiKriteria) {
+        // ==========================================================================
+        // 5 & 6. JARAK (D) DAN NILAI PREFERENSI (V)
+        // ==========================================================================
+        foreach ($alternatifs as $id_mp) {
             $sigmaPos = 0;
             $sigmaNeg = 0;
 
             foreach ($kriterias as $k) {
                 $id_k = $k->id_kriteria;
-                $y    = $nilaiKriteria[$id_k] ?? 0;
+                $y = $Y[$id_mp][$id_k];
 
-                // Jarak ke Solusi Ideal Positif (D+)
-                $sigmaPos += pow(($y - $A_Positif[$id_k]), 2);
-
-                // Jarak ke Solusi Ideal Negatif (D-)
-                $sigmaNeg += pow(($y - $A_Negatif[$id_k]), 2);
+                $sigmaPos += pow(($y - $A_Plus[$id_k]), 2);
+                $sigmaNeg += pow(($y - $A_Min[$id_k]), 2);
             }
 
-            $dPos = sqrt($sigmaPos); // Hasil Poin 7 (Kolom Kiri)
-            $dNeg = sqrt($sigmaNeg); // Hasil Poin 7 (Kolom Kanan)
+            $dPos = sqrt($sigmaPos);
+            $dNeg = sqrt($sigmaNeg);
 
-            // Hitung Skor Preferensi (V) - Poin 8
-            // Rumus: D- / (D- + D+)
+            // Hitung V
             $v = 0;
             if (($dNeg + $dPos) > 0) {
                 $v = $dNeg / ($dNeg + $dPos);
             }
 
-            // ------------------------------------------------------------------
-            // PENYIMPANAN HASIL (Untuk Poin 9: Perangkingan)
-            // ------------------------------------------------------------------
+            // Simpan ke Database
             Perhitungan::updateOrCreate(
-                [
-                    'id_user' => $userId,
-                    'id_mp'   => $id_mp
-                ],
-                [
-                    'hasil' => $v
-                    // Tips: Ranking biasanya dilakukan saat "SELECT ... ORDER BY hasil DESC"
-                ]
+                ['id_user' => $userId, 'id_mp' => $id_mp],
+                ['hasil' => $v]
             );
         }
+    }
+
+    public function group()
+    {
+        // 1. AMBIL DATA DENGAN RELASI
+        // Pastikan Model Perhitungan punya relasi 'user' dan 'mk_plhn'
+        $semuaHasil = Perhitungan::with(['user', 'mk_plhn'])->get();
+
+        // Cek jika kosong
+        if ($semuaHasil->isEmpty()) {
+            return view('admin.kelompok.index', [
+                'rankings' => [],
+                'detailUser' => []
+            ]);
+        }
+
+        // 2. GROUPING BERDASARKAN USER
+        $dataPerUser = $semuaHasil->groupBy('id_user');
+
+        // Variabel Penampung
+        $bordaScores = [];
+        $detailPerUser = [];
+
+        // 3. LOGIKA BORDA
+        foreach ($dataPerUser as $userId => $items) {
+
+            // Urutkan Ranking Individu (TOPSIS Tertinggi = Rank 1)
+            $sortedItems = $items->sortByDesc('hasil')->values();
+            $jumlahItem = $sortedItems->count();
+
+            // Ambil Nama User (Safe check jika user terhapus)
+            $namaUser = $items->first()->user->nama ?? $items->first()->user->username ?? 'User #'.$userId;
+
+            // Loop item milik user ini
+            foreach ($sortedItems as $index => $item) {
+                $rank = $index + 1;
+                $poin = ($jumlahItem - $rank) + 1;
+
+                // INIT ARRAY JIKA BELUM ADA
+                // (Ini bagian penting biar tidak error 'total_poin')
+                if (!isset($bordaScores[$item->id_mp])) {
+                    $bordaScores[$item->id_mp] = [
+                        'total_poin' => 0,
+                        'nama_mp' => $item->mk_plhn->nama_mp ?? 'Unknown',
+                        'kode_mp' => $item->mk_plhn->kode_mp ?? '-',
+                    ];
+                }
+
+                // TAMBAHKAN POIN
+                $bordaScores[$item->id_mp]['total_poin'] += $poin;
+
+                // AMBIL DETAIL PILIHAN JUARA 1 USER (Untuk Tabel Transparansi)
+                if ($rank == 1) {
+                    $detailPerUser[] = [
+                        'nama_user' => $namaUser,
+                        'pilihan_top' => $item->mk_plhn->nama_mp ?? 'Unknown',
+                        'skor_topsis' => $item->hasil
+                    ];
+                }
+            }
+        }
+
+        // 4. SORTING HASIL AKHIR (Poin Tertinggi diatas)
+        uasort($bordaScores, function ($a, $b) {
+            return $b['total_poin'] <=> $a['total_poin'];
+        });
+
+        // 5. RAPIKAN DATA FINAL
+        // Disinilah properti 'total_poin' dibuat agar bisa dibaca di View
+        $finalRankings = [];
+        $rank = 1;
+        foreach ($bordaScores as $id_mp => $data) {
+            $finalRankings[] = (object) [
+                'rank' => $rank++,
+                'nama_mp' => $data['nama_mp'],
+                'kode_mp' => $data['kode_mp'],
+                'total_poin' => $data['total_poin']
+            ];
+        }
+
+        // Kirim ke View
+        return view('admin.kelompok.index', [
+            'rankings' => $finalRankings,
+            'detailUser' => $detailPerUser
+        ]);
     }
 }

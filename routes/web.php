@@ -102,6 +102,8 @@ Route::prefix('perhitungan')->name('perhitungan.')->group(function () {
     Route::post('/', [PerhitunganController::class, 'store'])->name('store');
 });
 
+Route::get('/debug-topsis', [PerhitunganController::class, 'debugTopsis']);
+
 /*
 |--------------------------------------------------------------------------
 | Ketua Dashboard

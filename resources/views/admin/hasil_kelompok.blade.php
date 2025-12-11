@@ -92,119 +92,106 @@
         </aside>
 
         <main class="flex-1 overflow-y-auto bg-[#fdfdfd]">
-            <header class="bg-white shadow-sm h-16 flex items-center justify-between px-6 sticky top-0 z-10 border-b border-gray-100">
-                <h2 class="text-xl font-semibold text-primary">Hasil Keputusan Kelompok (GDSS)</h2>
-                <div class="flex items-center space-x-3 text-primary">
-                    <span class="text-sm font-medium text-gray-600">
-                        {{ Auth::user()->nama ?? Auth::user()->username }}
-                        ({{ Auth::user()->level_user == 'ketua' ? 'Kaprodi' : 'Dosen' }})
-                    </span>
+        <header class="bg-white shadow-sm h-16 flex items-center justify-between px-6 sticky top-0 z-10 border-b border-gray-100">
+            <h2 class="text-xl font-semibold text-primary">Hasil Keputusan Kelompok (GDSS)</h2>
+            <div class="flex items-center space-x-3 text-primary">
+                <span class="text-sm font-medium text-gray-600">
+                    {{ Auth::user()->nama ?? Auth::user()->username }}
+                </span>
+            </div>
+        </header>
+
+        <div class="p-8">
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-primary">
+                    <h3 class="text-gray-500 text-sm uppercase font-bold mb-2">Pemenang Voting</h3>
+                    @if($rankings->isNotEmpty())
+                        <p class="text-3xl font-bold text-primary">{{ $rankings->first()->nama_mp }}</p>
+                        <p class="text-sm text-gray-600">Nilai Borda: {{ number_format($rankings->first()->nilai_akhir, 6) }}</p>
+                    @endif
                 </div>
-            </header>
-
-            <div class="p-8">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                    <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-primary">
-                        <h3 class="text-gray-500 text-sm uppercase font-bold mb-2">Rekomendasi Utama</h3>
-                        @if($rankings->isNotEmpty())
-                            <p class="text-3xl font-bold text-primary">{{ $rankings->first()->nama_mp }}</p>
-                            <p class="text-sm text-gray-600">Skor Gabungan: {{ number_format($rankings->first()->nilai_akhir, 5) }}</p>
-                        @else
-                            <p class="text-xl text-gray-400">Belum ada data</p>
-                        @endif
-                    </div>
-
-                    <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-secondary">
-                        <h3 class="text-gray-500 text-sm uppercase font-bold mb-2">Partisipan Penilai</h3>
-                        <div class="flex flex-wrap gap-2">
-                            @forelse($voters as $voter)
-                                <span class="bg-[#D2DCB6] text-primary px-3 py-1 rounded-full text-xs font-semibold">
-                                    {{ $voter->nama ?? $voter->username }} ({{ $voter->level_user == 'ketua' ? 'Kaprodi' : 'Dosen' }})
-                                </span>
-                            @empty
-                                <span class="text-gray-400 text-sm">Belum ada yang menilai</span>
-                            @endforelse
-                        </div>
-                    </div>
+                <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-secondary">
+                    <h3 class="text-gray-500 text-sm uppercase font-bold mb-2">Total Partisipan</h3>
+                    <p class="text-3xl font-bold text-gray-700">{{ $voters->count() }} <span class="text-lg font-normal text-gray-500">Orang</span></p>
                 </div>
+            </div>
 
-                <div class="bg-white p-8 rounded-xl card-shadow border-t-4 border-primary">
-                    <h1 class="text-2xl font-bold text-primary mb-2">Peringkat Akhir (Agregasi Kelompok)</h1>
-                    <p class="mb-6 text-gray-600 text-sm">Hasil ini diperoleh dari penggabungan nilai preferensi seluruh Decision Maker.</p>
-                <div class="overflow-x-auto rounded-lg border border-gray-200 card-shadow">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead>
-                            <tr class="table-header">
-                                <th class="px-6 py-3 text-center text-xs font-semibold text-primary uppercase tracking-wider w-24">
-                                    Peringkat
+            <div class="bg-white p-8 rounded-xl card-shadow border-t-4 border-primary">
+                <h1 class="text-2xl font-bold text-primary mb-6">2. Perhitungan Akhir Group Decision Support System (GDSS)</h1>
+
+                <div class="overflow-x-auto border border-gray-300">
+                    <table class="min-w-full divide-y divide-gray-300 border-collapse">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th rowspan="2" class="px-6 py-3 text-center text-sm font-bold text-black border border-gray-300 uppercase tracking-wider bg-white">
+                                    Alternatif
                                 </th>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-primary uppercase tracking-wider">
-                                    Kode MK
+                                <th colspan="{{ $totalKandidat }}" class="px-6 py-2 text-center text-sm font-bold text-black border border-gray-300 uppercase tracking-wider bg-white">
+                                    Ranking
                                 </th>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-primary uppercase tracking-wider">
-                                    Nama Matakuliah
+                                <th rowspan="2" class="px-6 py-3 text-center text-sm font-bold text-black border border-gray-300 uppercase tracking-wider bg-white">
+                                    Poin Borda
                                 </th>
-                                <th class="px-6 py-3 text-center text-xs font-semibold text-primary uppercase tracking-wider">
-                                    Jml Penilai
+                                <th rowspan="2" class="px-6 py-3 text-center text-sm font-bold text-black border border-gray-300 uppercase tracking-wider bg-white">
+                                    Nilai Borda
                                 </th>
-                                <th class="px-6 py-3 text-center text-xs font-semibold text-primary uppercase tracking-wider">
-                                    Nilai Akhir
-                                </th>
+                            </tr>
+                            <tr>
+                                @for($i = 1; $i <= $totalKandidat; $i++)
+                                    <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 border border-gray-300 bg-white">
+                                        {{ $i }}
+                                    </th>
+                                @endfor
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             @forelse($rankings as $rank)
-                                <tr class="hover:bg-gray-50 transition duration-150">
-
-                                    <td class="px-6 py-4 whitespace-nowrap text-center">
-                                        @if($loop->iteration == 1)
-                                            <div class="mx-auto w-10 h-10 rounded-full bg-yellow-100 text-yellow-700 border-2 border-yellow-300 flex items-center justify-center font-bold shadow-sm">
-                                                #1
-                                            </div>
-                                        @elseif($loop->iteration == 2)
-                                            <div class="mx-auto w-10 h-10 rounded-full bg-gray-100 text-gray-600 border-2 border-gray-300 flex items-center justify-center font-bold shadow-sm">
-                                                #2
-                                            </div>
-                                        @elseif($loop->iteration == 3)
-                                            <div class="mx-auto w-10 h-10 rounded-full bg-orange-100 text-orange-700 border-2 border-orange-200 flex items-center justify-center font-bold shadow-sm">
-                                                #3
-                                            </div>
-                                        @else
-                                            <span class="text-gray-500 font-semibold font-mono text-lg">
-                                                #{{ $loop->iteration }}
-                                            </span>
-                                        @endif
-                                    </td>
-
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800">
-                                        {{ $rank->kode_mp }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 font-semibold">
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 border border-gray-300">
                                         {{ $rank->nama_mp }}
                                     </td>
 
-                                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-600">
-                                        {{ $rank->jumlah_pemilih }} Orang
+                                    @for($i = 1; $i <= $totalKandidat; $i++)
+                                        <td class="px-4 py-4 whitespace-nowrap text-center text-sm text-gray-600 border border-gray-300">
+                                            @if(isset($rank->detail_rank[$i]))
+                                                {{ number_format($rank->detail_rank[$i], 5, ',', '.') }}
+                                            @else
+                                                0
+                                            @endif
+                                        </td>
+                                    @endfor
+
+                                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-bold text-gray-800 border border-gray-300">
+                                        {{ number_format($rank->poin_borda, 5, ',', '.') }}
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-bold text-primary text-lg">
-                                        {{ number_format($rank->nilai_akhir, 5) }}
+
+                                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-bold text-black border border-gray-300">
+                                        {{ number_format($rank->nilai_akhir, 5, ',', '.') }}
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="px-6 py-12 text-center">
-                                        <div class="flex flex-col items-center justify-center text-gray-400">
-                                            <svg class="w-12 h-12 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                            <span class="text-lg font-medium">Belum ada data perhitungan yang masuk.</span>
-                                        </div>
+                                    <td colspan="{{ 3 + $totalKandidat }}" class="px-6 py-4 text-center text-gray-500">
+                                        Data kosong
                                     </td>
                                 </tr>
                             @endforelse
+
+                            <tr class="bg-gray-50 font-bold">
+                                <td colspan="{{ 1 + $totalKandidat }}" class="px-6 py-3 text-right text-sm text-gray-900 border border-gray-300">
+                                    Total
+                                </td>
+                                <td class="px-6 py-3 text-center text-sm text-gray-900 border border-gray-300">
+                                    {{ number_format($rankings->sum('poin_borda'), 5, ',', '.') }}
+                                </td>
+                                <td class="border border-gray-300"></td> </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
-        </main>
+        </div>
+    </main>
     </div>
 </body>
 </html>

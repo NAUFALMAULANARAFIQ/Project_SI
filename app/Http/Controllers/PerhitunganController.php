@@ -49,7 +49,7 @@ class PerhitunganController extends Controller
             // Contoh Excel C1: sqrt(5^2 + 3^2 + 4^2) = sqrt(50) = 7.071...
             $pembagi[$id_k] = ($sumKuadrat > 0) ? sqrt($sumKuadrat) : 1;
         }
-        dd($pembagi);
+        // dd($pembagi);
 
         // ----------------------------------------------------------------------
         // TAHAP 2: MATRIKS TERNORMALISASI TERBOBOT (Sesuai Poin 5 di Excel)
